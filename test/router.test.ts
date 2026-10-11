@@ -9,6 +9,7 @@ import {
 	choose,
 	classify,
 	clientReroute,
+	coolingReason,
 	emptyState,
 	HOUR,
 	MINUTE,
@@ -212,6 +213,68 @@ test("Store survives corrupt files", () => {
 	assert.deepEqual(store.load().models, {});
 	writeFileSync(store.file, "{not json");
 	assert.deepEqual(store.load(), emptyState());
+	rmSync(dir, { recursive: true, force: true });
+});
+
+test("Store.load normalizes mixed valid and corrupt nested state", () => {
+	const dir = mkdtempSync(join(tmpdir(), "vazhi-store-"));
+	const store = new Store(dir);
+	writeFileSync(
+		store.file,
+		JSON.stringify({
+			models: {
+				"good/a": { until: 5_000, failures: 2, reason: "rate: x", at: 100 },
+				"bad/a": { until: "not-finite", failures: 1, reason: "x", at: 0 },
+				"bad/b": { until: 1, failures: 1, at: 0 },
+			},
+			providers: {
+				good: { until: 3_000, failures: 1, reason: "auth: x", at: 50 },
+				bad: { until: 1, failures: "nope", reason: "x", at: 0 },
+			},
+			lastLimit: {
+				good: { at: 200, model: "kilo/a" },
+				badAt: { at: "NaN", model: "kilo/b" },
+				badModel: { at: 300, model: 42 },
+			},
+			dispatched: {
+				"good/rpm": [1_000, 2_000, "skip", null, Number.POSITIVE_INFINITY],
+				"bad/rpm": 7,
+			},
+			slow: {
+				"good/slow": 9_000,
+				"bad/slow": "not-a-number",
+				"bad/inf": "Infinity",
+			},
+		}),
+	);
+	const state = store.load();
+	assert.deepEqual(state.models["good/a"], { until: 5_000, failures: 2, reason: "rate: x", at: 100 });
+	assert.deepEqual(state.providers.good, { until: 3_000, failures: 1, reason: "auth: x", at: 50 });
+	assert.deepEqual(state.lastLimit.good, { at: 200, model: "kilo/a" });
+	assert.deepEqual(state.dispatched["good/rpm"], [1_000, 2_000]);
+	assert.equal(state.slow["good/slow"], 9_000);
+
+	const pool = [
+		{ model: "good/a" },
+		{ model: "good/rpm", rpm: 2 },
+		{ model: "bad/rpm", rpm: 2 },
+		{ model: "other/x" },
+	];
+	const now = 2_500;
+	assert.doesNotThrow(() => choose(pool, state, now));
+	assert.doesNotThrow(() => reserve(state, pool[1], now));
+	assert.doesNotThrow(() => coolingReason(state, pool[0], now));
+	assert.doesNotThrow(() => coolingReason(state, pool[1], now));
+
+	assert.equal(state.models["bad/a"], undefined);
+	assert.equal(state.models["bad/b"], undefined);
+	assert.equal(state.providers.bad, undefined);
+	assert.equal(state.lastLimit.badAt, undefined);
+	assert.equal(state.lastLimit.badModel, undefined);
+	assert.equal(state.dispatched["bad/rpm"], undefined);
+	assert.equal(state.slow["bad/slow"], undefined);
+	assert.equal(state.slow["bad/inf"], undefined);
+
 	rmSync(dir, { recursive: true, force: true });
 });
 

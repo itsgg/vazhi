@@ -102,6 +102,53 @@ function num(value: unknown): number {
 	return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
+function finite(value: unknown): value is number {
+	return typeof value === "number" && Number.isFinite(value);
+}
+
+function cooldowns(raw: unknown): Record<string, Cooldown> {
+	return Object.fromEntries(
+		Object.entries(record(raw)).flatMap(([key, value]) => {
+			const entry = value as Record<string, unknown>;
+			if (
+				typeof entry?.reason !== "string" ||
+				!finite(entry.until) ||
+				!finite(entry.failures) ||
+				!finite(entry.at)
+			) {
+				return [];
+			}
+			return [[key, { until: entry.until, failures: entry.failures, reason: entry.reason, at: entry.at }]];
+		}),
+	);
+}
+
+function providerLimits(raw: unknown): State["lastLimit"] {
+	return Object.fromEntries(
+		Object.entries(record(raw)).flatMap(([key, value]) => {
+			const entry = value as Record<string, unknown>;
+			if (!finite(entry?.at) || typeof entry.model !== "string") return [];
+			return [[key, { at: entry.at, model: entry.model }]];
+		}),
+	);
+}
+
+function dispatchHistory(raw: unknown): State["dispatched"] {
+	return Object.fromEntries(
+		Object.entries(record(raw)).flatMap(([key, value]) => {
+			if (!Array.isArray(value)) return [];
+			const times = value.filter(finite);
+			return times.length ? [[key, times]] : [];
+		}),
+	);
+}
+
+function slowMarkers(raw: unknown): State["slow"] {
+	return Object.fromEntries(
+		Object.entries(record(raw)).flatMap(([key, value]) => (finite(value) ? [[key, value]] : [])),
+	);
+}
+
 const SIGNATURE_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
 
 function isGemini3(modelId: string): boolean {
@@ -193,11 +240,11 @@ export class Store {
 			return emptyState();
 		}
 		return {
-			models: record(raw.models),
-			providers: record(raw.providers),
-			lastLimit: record(raw.lastLimit),
-			dispatched: record(raw.dispatched),
-			slow: record(raw.slow),
+			models: cooldowns(raw.models),
+			providers: cooldowns(raw.providers),
+			lastLimit: providerLimits(raw.lastLimit),
+			dispatched: dispatchHistory(raw.dispatched),
+			slow: slowMarkers(raw.slow),
 		};
 	}
 
