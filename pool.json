@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-11T08:45:49.881Z",
+  "generated": "2026-10-11T08:49:41.592Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -234,13 +234,13 @@
   },
   "pool": [
     {
-      "model": "nvidia/z-ai/glm-5.3-flash",
-      "score": 46,
+      "model": "nvidia/z-ai/glm-5.3",
+      "score": 50,
       "status": "ok"
     },
     {
-      "model": "nvidia/deepseek-ai/deepseek-v4.1-flash",
-      "score": 40,
+      "model": "nvidia/z-ai/glm-5.3-flash",
+      "score": 46,
       "status": "ok"
     },
     {
@@ -266,8 +266,8 @@
     },
     {
       "model": "kilo/poolside/laguna-s-2.1:free",
-      "score": 32.3,
-      "status": "ok"
+      "score": 30.7,
+      "status": "unverified"
     },
     {
       "model": "ollama-cloud/nemotron-3-ultra",
@@ -409,11 +409,6 @@
       "status": "ok"
     },
     {
-      "model": "nvidia/poolside/laguna-xs-2.1",
-      "score": 10,
-      "status": "ok"
-    },
-    {
       "model": "openrouter/nvidia/nemotron-3.5-lightning:free",
       "score": 10,
       "status": "unverified"
@@ -430,7 +425,12 @@
     },
     {
       "model": "kilo/poolside/laguna-xs-2.1:free",
-      "score": 9,
+      "score": 9.5,
+      "status": "ok"
+    },
+    {
+      "model": "nvidia/poolside/laguna-xs-2.1",
+      "score": 9.5,
       "status": "unverified"
     },
     {
