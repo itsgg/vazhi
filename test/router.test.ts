@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import { existsSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -342,6 +344,85 @@ test("a lock is taken over only when stale, and only its owner removes it (revie
 	store.update(() => writeFileSync(lock, "someone-else"));
 	assert.equal(readFileSync(lock, "utf8"), "someone-else", "a lock it no longer owns is left alone");
 	rmSync(dir, { recursive: true, force: true });
+});
+
+test("stale cleanup cannot delete a replacement lock", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "vazhi-replacement-"));
+	const stateFile = join(dir, "state.json");
+	const lock = `${stateFile}.lock`;
+	const claim = `${lock}.claim`;
+	const trigger = join(dir, "replace");
+	const replacementReady = join(dir, "replacement-ready");
+	const nextInspection = join(dir, "next-inspection");
+	const outcome = join(dir, "outcome");
+	const token = "fresh-owner";
+	const worker = join(dir, "replacement-owner.mts");
+	writeFileSync(lock, "stale-owner");
+	const old = (Date.now() - 10_000) / 1000;
+	utimesSync(lock, old, old);
+	writeFileSync(
+		worker,
+		`import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";\n` +
+			`const sleep = () => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2);\n` +
+			`while (!existsSync(${JSON.stringify(trigger)})) sleep();\n` +
+			`unlinkSync(${JSON.stringify(lock)});\n` +
+			`writeFileSync(${JSON.stringify(lock)}, ${JSON.stringify(token)}, { flag: "wx" });\n` +
+			`writeFileSync(${JSON.stringify(replacementReady)}, "");\n` +
+			`for (;;) {\n` +
+			`  let current;\n` +
+			`  try { current = readFileSync(${JSON.stringify(lock)}, "utf8"); } catch { current = undefined; }\n` +
+			`  if (current !== ${JSON.stringify(token)}) { writeFileSync(${JSON.stringify(outcome)}, "deleted"); break; }\n` +
+			`  if (existsSync(${JSON.stringify(nextInspection)})) {\n` +
+			`    unlinkSync(${JSON.stringify(lock)});\n` +
+			`    writeFileSync(${JSON.stringify(outcome)}, "released");\n` +
+			`    break;\n` +
+			`  }\n` +
+			`  sleep();\n` +
+			`}\n`,
+	);
+	const child = spawn(process.execPath, [worker], { stdio: "inherit" });
+	const childExit = new Promise<number | null>((resolve) => child.on("exit", resolve));
+	const originalStatSync = fs.statSync;
+	const mutableFs = fs as { statSync: typeof fs.statSync };
+	let inspections = 0;
+	mutableFs.statSync = ((...args: Parameters<typeof fs.statSync>) => {
+		const path = String(args[0]);
+		if (path !== lock && path !== claim) return Reflect.apply(originalStatSync, fs, args);
+		inspections++;
+		const inspected = Reflect.apply(originalStatSync, fs, args);
+		if (inspections === 1) {
+			writeFileSync(trigger, "");
+			const deadline = Date.now() + 5_000;
+			while (!existsSync(replacementReady)) {
+				if (Date.now() >= deadline) throw new Error("replacement owner did not acquire the lock");
+				Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2);
+			}
+		} else if (inspections === 2) {
+			writeFileSync(nextInspection, "");
+		}
+		return inspected;
+	}) as typeof fs.statSync;
+	syncBuiltinESMExports();
+
+	try {
+		const routerUrl = new URL("../src/router.ts", import.meta.url);
+		routerUrl.searchParams.set("replacement-race", String(Date.now()));
+		const { Store: RaceStore } = (await import(routerUrl.href)) as typeof import("../src/router.ts");
+		const store = new RaceStore(dir);
+		store.update((state) => {
+			state.dispatched.race = [1];
+		});
+		assert.equal(await childExit, 0);
+		assert.equal(readFileSync(outcome, "utf8"), "released", "the fresh owner releases its own lock");
+		assert.equal(store.load().dispatched.race[0], 1, "the waiting update completes");
+		assert.equal(existsSync(lock), false);
+		assert.equal(existsSync(claim), false);
+	} finally {
+		mutableFs.statSync = originalStatSync;
+		syncBuiltinESMExports();
+		child.kill();
+		rmSync(dir, { recursive: true, force: true });
+	}
 });
 
 test("slow starters go behind faster models but still serve when nothing else is ready", () => {

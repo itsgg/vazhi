@@ -2,7 +2,7 @@
  * Routing decisions: how long a failed model cools down, which model takes the next request, and
  * the state file every pi process shares. Nothing here talks to pi, so it tests on plain Node.
  */
-import { mkdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { linkSync, mkdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const SECOND = 1000;
@@ -224,11 +224,13 @@ export class Store {
 	readonly dir: string;
 	readonly file: string;
 	private readonly lock: string;
+	private readonly claim: string;
 
 	constructor(dir: string) {
 		this.dir = dir;
 		this.file = join(dir, "state.json");
 		this.lock = `${this.file}.lock`;
+		this.claim = `${this.lock}.claim`;
 	}
 
 	/** Cooldowns are a cache of what failed: a missing or corrupt file costs a few failed requests, not the router. */
@@ -255,6 +257,34 @@ export class Store {
 	}
 
 	/**
+	 * Serialize deletion through a hard link that keeps the inspected inode stable. Returns false
+	 * when another process owns the claim, so the caller can wait and retry.
+	 */
+	private deleteLockIf(shouldDelete: (claimedToken: string) => boolean): boolean {
+		try {
+			linkSync(this.lock, this.claim);
+		} catch (error) {
+			const code = (error as NodeJS.ErrnoException).code;
+			if (code === "EEXIST") return false;
+			if (code === "ENOENT") return true;
+			throw error;
+		}
+		try {
+			const claimedToken = readFileSync(this.claim, "utf8");
+			if (!shouldDelete(claimedToken)) return true;
+			if (readFileSync(this.lock, "utf8") === claimedToken) unlinkSync(this.lock);
+			return true;
+		} catch (error) {
+			if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
+			throw error;
+		} finally {
+			try {
+				unlinkSync(this.claim);
+			} catch {}
+		}
+	}
+
+	/**
 	 * Load, change and save the state as one step across processes. The lock holds its owner's
 	 * token; a waiter takes it over only once it is 5 s old, which means its holder died, since
 	 * every holder releases it within milliseconds.
@@ -269,7 +299,7 @@ export class Store {
 			} catch (error) {
 				if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
 				try {
-					if (Date.now() - statSync(this.lock).mtimeMs > 5 * SECOND) unlinkSync(this.lock);
+					this.deleteLockIf(() => Date.now() - statSync(this.claim).mtimeMs > 5 * SECOND);
 				} catch {}
 				sleepSync(5);
 			}
@@ -281,7 +311,7 @@ export class Store {
 			return result;
 		} finally {
 			try {
-				if (readFileSync(this.lock, "utf8") === token) unlinkSync(this.lock);
+				while (!this.deleteLockIf((claimedToken) => claimedToken === token)) sleepSync(5);
 			} catch {}
 		}
 	}
