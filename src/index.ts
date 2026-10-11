@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import type { Api, AssistantMessage, Model } from "@earendil-works/pi-ai";
 import { isContextOverflow, isRetryableAssistantError } from "@earendil-works/pi-ai/compat";
 import { getAgentDir, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { loadPool, parsePool, refreshRemote, type PoolFile } from "./pool.ts";
+import { loadPool, parsePool, refreshDue, refreshRemote, type PoolFile } from "./pool.ts";
 import { ANONYMOUS_KEY, OWN_PROVIDERS } from "./providers.ts";
 import {
 	choose,
@@ -112,6 +112,37 @@ export default function (pi: ExtensionAPI) {
 	const current = () => loadPool(dir, bundled);
 	registerProviders(pi, current().pool);
 
+	// One pool per turn: a pool downloaded mid-turn takes effect at the next turn, so the models a
+	// turn routes between, and the providers registered for them, never change under it.
+	let turn = current();
+	let downloaded = false;
+	const startTurn = () => {
+		if (downloaded) {
+			downloaded = false;
+			registerProviders(pi, current().pool);
+		}
+		turn = current();
+	};
+
+	// Checked at every session start and every turn, so a session left open for days still picks up
+	// the nightly pool. In the background, and one download at a time in this process, forced or
+	// not; a fresh copy costs two small reads.
+	let downloading: Promise<boolean> | undefined;
+	const download = (force = false): Promise<boolean> => {
+		if (downloading) return force ? downloading.then(() => download(true)) : downloading;
+		if (!force && !refreshDue(dir)) return Promise.resolve(false);
+		downloading = refreshRemote(dir, { force })
+			.then((updated) => {
+				if (updated) downloaded = true;
+				return updated;
+			})
+			.catch(() => false)
+			.finally(() => {
+				downloading = undefined;
+			});
+		return downloading;
+	};
+
 	pi.registerVirtualModel({
 		provider: PROVIDER,
 		id: ID,
@@ -120,13 +151,17 @@ export default function (pi: ExtensionAPI) {
 		contextWindow: 128_000,
 		maxTokens: 32_768,
 		async route(request, ctx) {
+			if (request.reason === "user") {
+				startTurn();
+				void download();
+			}
 			const previous = request.reason === "continuation" && request.previous ? keyOf(request.previous.model) : undefined;
 			const failed = request.reason === "retry" && request.failed ? keyOf(request.failed.model) : undefined;
-			// Recomputed on every attempt: a pool update during a wait can add or remove models.
+			// Credentials are rechecked on every attempt; the pool stays the turn's.
 			let candidates: { entry: PoolEntry; model: Model<Api> }[] = [];
 			const choice = await pickWithin(
 				() => {
-					candidates = credentialed(ctx, current().pool.pool);
+					candidates = credentialed(ctx, turn.pool.pool);
 					if (candidates.length === 0) throw new Error("vazhi: no pool model has credentials; run /vazhi to see the pool");
 					const entries = candidates.map((c) => c.entry);
 					return store.update((state) => {
@@ -151,10 +186,8 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("session_start", () => {
-		// In the background: a slow network must not hold up the session.
-		void refreshRemote(dir)
-			.then((updated) => updated && registerProviders(pi, current().pool))
-			.catch(() => {});
+		startTurn();
+		void download();
 	});
 
 	let clientReroutes: number[] = [];
@@ -180,7 +213,7 @@ export default function (pi: ExtensionAPI) {
 			if (!next) return;
 			clientReroutes = next;
 		}
-		const ms = store.update((state) => penalize(state, key, text, Date.now(), current().pool.sharedLimits));
+		const ms = store.update((state) => penalize(state, key, text, Date.now(), turn.pool.sharedLimits));
 		if (ctx.hasUI) ctx.ui.notify(`vazhi: ${key} cooling for ${formatDuration(ms)}, rerouting`, "warning");
 		const replacement = retryable(message, key, rule.kind, ms);
 		return replacement ? { message: replacement } : undefined;
@@ -200,8 +233,8 @@ export default function (pi: ExtensionAPI) {
 				return;
 			}
 			if (arg === "update") {
-				const updated = await refreshRemote(dir, { force: true });
-				if (updated) registerProviders(pi, current().pool);
+				const updated = await download(true);
+				startTurn();
 				ctx.ui.notify(updated ? "vazhi: fetched a newer pool" : "vazhi: pool already current, or GitHub unreachable", "info");
 				return;
 			}

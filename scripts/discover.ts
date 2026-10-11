@@ -3,7 +3,8 @@
  *
  * 1. Candidates: free chat models with tool calling from each provider's public catalog. For
  *    pi's built-in providers only models in pi's own catalog qualify, since vazhi routes through
- *    pi's model registry.
+ *    pi's model registry: the catalog bundled with the pinned pi, plus the live one pi itself
+ *    downloads from pi.dev every 4 hours, so a model pi learns about today counts tonight.
  * 2. Probe: one tool-calling request each, where a key or anonymous access allows it.
  * 3. Rank: scripts/rank.ts.
  *
@@ -112,18 +113,49 @@ function staticRows(found: Found): void {
 	for (const model of statics.builtin ?? []) found.candidates.push({ model, probed: false });
 }
 
+/**
+ * Chat model ids pi knows for a built-in provider: the catalog bundled with the pinned pi, plus
+ * the live catalog pi downloads from pi.dev. When pi.dev fails or answers with nothing, the
+ * provider's models in last night's pool stand in for the live part, so an outage drops nothing.
+ */
+export async function piCatalog(provider: string, bundled: Record<string, unknown>, previous: string[] = []): Promise<string[]> {
+	const ids = new Set(Object.keys(bundled));
+	try {
+		const live = await getJson(`https://pi.dev/api/models/providers/${encodeURIComponent(provider)}?types=chat`);
+		const list = Array.isArray(live) ? live : Array.isArray(live?.models) ? live.models : [];
+		const chat = list.filter((m: any) => typeof m?.id === "string" && (m.type ?? "chat") === "chat");
+		if (chat.length === 0) throw new Error("empty or malformed catalog");
+		for (const m of chat) ids.add(m.id);
+	} catch (error) {
+		log(`pi.dev catalog for ${provider} failed, keeping last night's models: ${(error as Error).message}`);
+		for (const id of previous) ids.add(id);
+	}
+	return [...ids];
+}
+
+/** The ids a provider had in the committed pool, the fallback when a live catalog fails. */
+function previousIds(provider: string): string[] {
+	try {
+		return parsePool(read("pool.json"))
+			.pool.filter((e) => e.model.startsWith(`${provider}/`))
+			.map((e) => e.model.slice(provider.length + 1));
+	} catch {
+		return [];
+	}
+}
+
 /** NVIDIA NIM: pi's catalog, limited to what NIM lists today. */
 async function nvidia(found: Found): Promise<void> {
 	const listed = new Set(rows("nvidia", (await getJson("https://integrate.api.nvidia.com/v1/models")).data).map((m: any) => m.id));
-	for (const id of Object.keys(NVIDIA_MODELS)) {
+	for (const id of await piCatalog("nvidia", NVIDIA_MODELS, previousIds("nvidia"))) {
 		if (!listed.has(id) || excluded(`nvidia/${id}`)) continue;
 		found.candidates.push({ model: `nvidia/${id}`, probed: !!process.env.NVIDIA_API_KEY });
 	}
 }
 
 /** Gemini: the Flash and Flash-Lite models in pi's catalog; the probe finds out which are free. */
-function google(found: Found): void {
-	for (const id of Object.keys(GOOGLE_MODELS)) {
+async function google(found: Found): Promise<void> {
+	for (const id of await piCatalog("google", GOOGLE_MODELS, previousIds("google"))) {
 		if (!/^gemini-\d+(\.\d+)?-flash(-lite)?$/.test(id) || excluded(`google/${id}`)) continue;
 		found.candidates.push({ model: `google/${id}`, probed: !!process.env.GEMINI_API_KEY });
 	}
@@ -133,7 +165,7 @@ function google(found: Found): void {
 async function openrouter(found: Found): Promise<void> {
 	const data = rows("openrouter", (await getJson("https://openrouter.ai/api/v1/models")).data);
 	const live = new Set(data.filter((m: any) => (m.supported_parameters ?? []).includes("tools")).map((m: any) => m.id));
-	for (const id of Object.keys(OPENROUTER_MODELS)) {
+	for (const id of await piCatalog("openrouter", OPENROUTER_MODELS, previousIds("openrouter"))) {
 		if ((!id.endsWith(":free") && id !== "openrouter/free") || !live.has(id) || excluded(`openrouter/${id}`)) continue;
 		found.candidates.push({ model: `openrouter/${id}`, probed: false });
 	}
@@ -280,7 +312,7 @@ async function main() {
 			if (name in found.models) found.models[name] = previous.models[name] ?? [];
 		}
 	}
-	google(found);
+	await google(found);
 	staticRows(found);
 
 	const history: History = existsSync(ROOT + HISTORY) ? read(HISTORY) : {};
