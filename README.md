@@ -7,10 +7,10 @@ The model list is rebuilt every night by CI: it reads the free catalogs, sends e
 ## Install
 
 ```bash
-pi install git:github.com/itsgg/vazhi
+pi install npm:vazhi
 ```
 
-An npm release (`pi install npm:vazhi`) is coming.
+Or straight from GitHub: `pi install git:github.com/itsgg/vazhi`.
 
 Then make `vazhi/auto` the default and give pi enough retries to walk the pool, in `~/.pi/agent/settings.json`:
 
