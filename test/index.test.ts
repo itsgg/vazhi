@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { isRetryableAssistantError } from "@earendil-works/pi-ai/compat";
-import { adjustHeaders, retryable } from "../src/index.ts";
+import { adjustHeaders, retryable, summarizeError } from "../src/index.ts";
 import { ANONYMOUS_KEY } from "../src/providers.ts";
 
 const base = {
@@ -14,6 +14,24 @@ const base = {
 	timestamp: 0,
 	usage: {},
 } as any;
+
+test("structured provider error.message shapes are summarized without throwing", () => {
+	const key = "prov/model";
+	const objectMessage = summarizeError(JSON.stringify({ error: { message: { code: "invalid" } } }), key);
+	assert.ok(!objectMessage.includes("\n"));
+	assert.match(objectMessage, new RegExp(key));
+	assert.match(objectMessage, /\{"code":"invalid"\}/);
+
+	const numericMessage = summarizeError(JSON.stringify({ error: { message: 429 } }), key);
+	assert.ok(!numericMessage.includes("\n"));
+	assert.match(numericMessage, new RegExp(key));
+	assert.match(numericMessage, /429/);
+
+	const nullMessage = summarizeError(JSON.stringify({ error: { message: null } }), key);
+	assert.ok(!nullMessage.includes("\n"));
+	assert.match(nullMessage, new RegExp(key));
+	assert.match(nullMessage, /null/);
+});
 
 test("quota errors pi would never retry are rewritten into ones it does", () => {
 	const quota = { ...base, errorMessage: '429 {"type":"insufficient_quota","message":"quota exceeded"}' };

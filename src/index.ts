@@ -58,25 +58,37 @@ function sanitizeQuotaWords(text: string): string {
 		.trim();
 }
 
+function valueToText(value: unknown): string {
+	if (typeof value === "string") return value;
+	return JSON.stringify(value);
+}
+
+function extractMessageText(parsed: { error?: { message?: unknown }; message?: unknown }): string | undefined {
+	if (parsed.error && "message" in parsed.error) {
+		const inner = parsed.error.message;
+		if (typeof inner === "string") {
+			try {
+				const innerParsed = JSON.parse(inner);
+				if (innerParsed.error && "message" in innerParsed.error) return valueToText(innerParsed.error.message);
+			} catch {}
+			return inner;
+		}
+		return valueToText(inner);
+	}
+	if ("message" in parsed) return valueToText(parsed.message);
+	return undefined;
+}
+
 /**
  * Normalize a raw provider error message into a clean one-liner for display.
  */
 export function summarizeError(raw: string, key: string): string {
-	let text = raw.replace(/\s+/g, " ").trim();
+	const normalizedRaw = raw.replace(/\s+/g, " ").trim();
+	let text = normalizedRaw;
 	try {
-		const parsed = JSON.parse(text);
-		if (parsed.error?.message) {
-			const inner = parsed.error.message;
-			try {
-				const innerParsed = JSON.parse(inner);
-				if (innerParsed.error?.message) text = innerParsed.error.message;
-				else text = inner;
-			} catch {
-				text = inner;
-			}
-		} else if (parsed.message) {
-			text = parsed.message;
-		}
+		const parsed = JSON.parse(normalizedRaw);
+		const extracted = extractMessageText(parsed);
+		if (extracted !== undefined) text = extracted;
 	} catch {}
 
 	text = sanitizeQuotaWords(text);
