@@ -9,7 +9,7 @@ vazhi is Tamil for "way".
 ## Install
 
 ```bash
-pi install npm:vazhi
+pi install npm:@itsgg/vazhi
 ```
 
 Or from GitHub: `pi install git:github.com/itsgg/vazhi`.
