@@ -15,22 +15,39 @@ const base = {
 	usage: {},
 } as any;
 
+test("string error field does not hide a top-level message", () => {
+	assert.equal(
+		summarizeError(JSON.stringify({ statusCode: 401, message: "Invalid key", error: "Unauthorized" }), "p/m"),
+		"p/m: Invalid key",
+	);
+});
+
 test("structured provider error.message shapes are summarized without throwing", () => {
 	const key = "prov/model";
-	const objectMessage = summarizeError(JSON.stringify({ error: { message: { code: "invalid" } } }), key);
-	assert.ok(!objectMessage.includes("\n"));
-	assert.match(objectMessage, new RegExp(key));
-	assert.match(objectMessage, /\{"code":"invalid"\}/);
+	assert.equal(
+		summarizeError(JSON.stringify({ error: { message: { code: "invalid" } } }), key),
+		`${key}: {"code":"invalid"}`,
+	);
 
-	const numericMessage = summarizeError(JSON.stringify({ error: { message: 429 } }), key);
-	assert.ok(!numericMessage.includes("\n"));
-	assert.match(numericMessage, new RegExp(key));
-	assert.match(numericMessage, /429/);
+	assert.equal(summarizeError(JSON.stringify({ error: { message: 429 } }), key), `${key}: 429`);
 
-	const nullMessage = summarizeError(JSON.stringify({ error: { message: null } }), key);
-	assert.ok(!nullMessage.includes("\n"));
-	assert.match(nullMessage, new RegExp(key));
-	assert.match(nullMessage, /null/);
+	assert.equal(summarizeError(JSON.stringify({ error: { message: null } }), key), `${key}: null`);
+});
+
+test("empty error.message falls back to top-level message or raw body", () => {
+	const key = "prov/model";
+	assert.equal(
+		summarizeError(JSON.stringify({ error: { message: "" }, message: "Invalid key" }), key),
+		`${key}: Invalid key`,
+	);
+	assert.equal(
+		summarizeError(JSON.stringify({ error: { message: "" } }), key),
+		`${key}: {"error":{"message":""}}`,
+	);
+});
+
+test("top-level structured message values are stringified", () => {
+	assert.equal(summarizeError(JSON.stringify({ message: { code: "invalid" } }), "p/m"), 'p/m: {"code":"invalid"}');
 });
 
 test("quota errors pi would never retry are rewritten into ones it does", () => {

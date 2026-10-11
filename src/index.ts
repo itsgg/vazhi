@@ -63,19 +63,34 @@ function valueToText(value: unknown): string {
 	return JSON.stringify(value);
 }
 
-function extractMessageText(parsed: { error?: { message?: unknown }; message?: unknown }): string | undefined {
-	if (parsed.error && "message" in parsed.error) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function extractMessageText(parsed: unknown): string | undefined {
+	if (!isRecord(parsed)) return undefined;
+
+	if (isRecord(parsed.error) && "message" in parsed.error) {
 		const inner = parsed.error.message;
-		if (typeof inner === "string") {
+		if (inner === "") {
+			// fall through to top-level message or raw body
+		} else if (typeof inner === "string") {
 			try {
 				const innerParsed = JSON.parse(inner);
-				if (innerParsed.error && "message" in innerParsed.error) return valueToText(innerParsed.error.message);
+				const nested = extractMessageText(innerParsed);
+				if (nested !== undefined) return nested;
 			} catch {}
 			return inner;
+		} else {
+			return valueToText(inner);
 		}
-		return valueToText(inner);
 	}
-	if ("message" in parsed) return valueToText(parsed.message);
+
+	if ("message" in parsed) {
+		const top = parsed.message;
+		if (top === "") return undefined;
+		return valueToText(top);
+	}
 	return undefined;
 }
 
