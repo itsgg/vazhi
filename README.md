@@ -7,8 +7,10 @@ The model list is rebuilt every night by CI: it reads the free catalogs, sends e
 ## Install
 
 ```bash
-pi install npm:vazhi
+pi install git:github.com/itsgg/vazhi
 ```
+
+An npm release (`pi install npm:vazhi`) is coming.
 
 Then make `vazhi/auto` the default and give pi enough retries to walk the pool, in `~/.pi/agent/settings.json`:
 
@@ -45,11 +47,17 @@ pi retries rate limits and server errors by itself, and on each retry vazhi pick
 
 `/vazhi` shows the pool with each model's state, `/vazhi reset` clears all cooldowns and `/vazhi update` fetches the nightly pool now.
 
+## How updates arrive
+
+The model list updates itself. CI commits a new `pool.json` whenever tonight's probes change it, and vazhi checks its downloaded copy at the start of every session and every turn: once the copy is 12 hours old it fetches the new one in the background, or an hour after a failed try. New models for vazhi's own providers appear at once; models of pi's built-in providers also need pi to know them, which pi handles by refreshing its catalog from pi.dev every 4 hours. `/vazhi update` fetches now.
+
+Code changes, a fix to the router or a new provider, arrive with `pi update --extensions`.
+
 ## How the pool is built
 
 `.github/workflows/nightly.yml` runs `scripts/discover.ts` every night:
 
-1. Candidates are free chat models with tool calling, from the public catalogs of Kilo, OVHcloud, LLM7, NVIDIA NIM and OpenRouter, plus Gemini Flash. For pi's built-in providers only models in pi's own catalog qualify, since vazhi routes through pi's model registry.
+1. Candidates are free chat models with tool calling, from the public catalogs of Kilo, OVHcloud, LLM7, NVIDIA NIM and OpenRouter, plus Gemini Flash. For pi's built-in providers only models in pi's catalog qualify, since vazhi routes through pi's model registry; CI reads the same live catalog pi downloads from pi.dev, so a model pi learns about today is a candidate tonight.
 2. Each candidate gets one tool-calling request where CI can reach it. A pass marks it up; two failures in a row, or a failure with no pass before it, mark it down. A rate limit decides nothing, since CI shares IP addresses with others.
 3. The score is quality x capacity x eval. Quality is the [Artificial Analysis](https://artificialanalysis.ai/) coding index where AA covers the model, else a manual seed in `data/seed-scores.json`. Capacity is how much free use the provider gives (`scripts/rank.ts`). Eval is the weekly pi eval below. Models that are down go last.
 
