@@ -31,7 +31,17 @@ export interface State {
 	lastLimit: Record<string, { at: number; model: string }>;
 	/** Dispatch times in the last minute, for models with an rpm cap. */
 	dispatched: Record<string, number[]>;
+	/**
+	 * Models that answered but took long to start, until when. A preference, not a cooldown: a
+	 * slow model still serves when nothing faster is ready.
+	 */
+	slow: Record<string, number>;
 }
+
+/** A first token later than this marks a model slow; free queues swing from 2 s to over 30 s. */
+export const SLOW_START = 15 * SECOND;
+/** How long a slow start keeps a model behind faster ones. */
+export const SLOW_FOR = 10 * MINUTE;
 
 export type Kind =
 	| "auth"
@@ -81,7 +91,7 @@ const KINDS: { kind: Kind; pattern: RegExp; base: number; max: number }[] = [
 const SHARED_KINDS = new Set<Kind>(["minute", "hourly", "daily", "quota", "rate"]);
 
 export function emptyState(): State {
-	return { models: {}, providers: {}, lastLimit: {}, dispatched: {} };
+	return { models: {}, providers: {}, lastLimit: {}, dispatched: {}, slow: {} };
 }
 
 function record(value: unknown): Record<string, any> {
@@ -130,6 +140,7 @@ export class Store {
 			providers: record(raw.providers),
 			lastLimit: record(raw.lastLimit),
 			dispatched: record(raw.dispatched),
+			slow: record(raw.slow),
 		};
 	}
 
@@ -252,17 +263,31 @@ export function readyAt(state: State, entry: PoolEntry, now: number): number {
 	return at;
 }
 
+/**
+ * Record how long a model took to its first token. A start slower than SLOW_START marks it for
+ * SLOW_FOR; a fast start does not clear the mark early, or a slow model could clear itself the
+ * moment it is the only one ready and flap back to the front. Expired marks are pruned here.
+ */
+export function noteStart(state: State, key: string, firstTokenMs: number, now: number): void {
+	for (const [k, until] of Object.entries(state.slow)) if (num(until) <= now) delete state.slow[k];
+	if (firstTokenMs > SLOW_START) state.slow[key] = Math.max(num(state.slow[key]), now + SLOW_FOR);
+}
+
 export type Choice = { pick: PoolEntry } | { pick?: undefined; next: PoolEntry; waitMs: number };
 
 /**
- * The model for one request, from entries that have credentials, in pool order. Within a turn it
- * stays on the model already working on it; a retry avoids the model that just failed, even if
- * its cooldown was lost. With nothing ready it names the model that frees up first.
+ * The model for one request, from entries that have credentials, in pool order. Models that
+ * started slowly lately go behind the rest. Within a turn it stays on the model already working
+ * on it, unless that model is slow and a faster one is ready; a retry avoids the model that just
+ * failed, even if its cooldown was lost. With nothing ready it names the model that frees up first.
  */
 export function choose(entries: PoolEntry[], state: State, now: number, previous?: string, failed?: string): Choice {
 	const ready = entries.filter((e) => readyAt(state, e, now) <= now);
-	const usable = failed && ready.some((e) => e.model !== failed) ? ready.filter((e) => e.model !== failed) : ready;
-	const pick = usable.find((e) => e.model === previous) ?? usable[0];
+	const unfailed = failed && ready.some((e) => e.model !== failed) ? ready.filter((e) => e.model !== failed) : ready;
+	const isSlow = (e: PoolEntry) => num(state.slow[e.model]) > now;
+	const usable = [...unfailed.filter((e) => !isSlow(e)), ...unfailed.filter(isSlow)];
+	const stay = usable.find((e) => e.model === previous);
+	const pick = stay && (!isSlow(stay) || isSlow(usable[0])) ? stay : usable[0];
 	if (pick) return { pick };
 	const next = entries.reduce((a, b) => (readyAt(state, b, now) < readyAt(state, a, now) ? b : a));
 	return { next, waitMs: readyAt(state, next, now) - now };

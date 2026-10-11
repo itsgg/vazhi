@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
@@ -134,4 +134,43 @@ test("a pool downloaded mid-turn takes effect at the next turn (review of the up
 	} finally {
 		globalThis.fetch = stub;
 	}
+});
+
+test("the working line names the model being asked, and resets when the turn ends", async () => {
+	const { virtual, handlers } = load();
+	const messages: (string | undefined)[] = [];
+	const uiCtx = {
+		...ctx,
+		hasUI: true,
+		ui: { setWorkingMessage: (m?: string) => messages.push(m), notify() {} },
+		modelRegistry: { find: (provider: string, id: string) => ({ provider, id }), hasConfiguredAuth: () => true },
+	};
+	const route = await virtual.route({ reason: "user", thinkingLevel: "medium", messages: [] }, uiCtx);
+	assert.equal(messages.at(-1), `Working... (vazhi: ${route.model.id} on ${route.model.provider})`);
+	handlers.agent_end({ type: "agent_end", messages: [] }, uiCtx);
+	assert.equal(messages.at(-1), undefined, "default working message restored");
+});
+
+test("a response whose first token came late marks its model slow; start events do not count", () => {
+	const { handlers } = load();
+	const state = () => JSON.parse(readFileSync(join(process.env.PI_CODING_AGENT_DIR!, "vazhi", "state.json"), "utf8"));
+	const fast = { role: "assistant", provider: "kilo", model: "a:free", stopReason: "stop", timestamp: Date.now() - 20_000, content: [] };
+	handlers.message_update({ type: "message_update", message: fast, assistantMessageEvent: { type: "text_start" } }, ctx);
+	handlers.message_end({ type: "message_end", message: fast }, ctx);
+	assert.equal(state().slow["kilo/a:free"], undefined, "no delta, no first-token time, no mark");
+
+	const slow = { role: "assistant", provider: "nvidia", model: "z-ai/glm-5.3-flash", stopReason: "stop", timestamp: Date.now() - 20_000, content: [] };
+	handlers.message_update({ type: "message_update", message: slow, assistantMessageEvent: { type: "text_delta" } }, ctx);
+	handlers.message_end({ type: "message_end", message: slow }, ctx);
+	assert.ok(state().slow["nvidia/z-ai/glm-5.3-flash"] > Date.now(), "20 s to the first delta is slow");
+});
+
+test("NVIDIA's poll window is shortened only while vazhi routes", () => {
+	const { handlers } = load();
+	const routed: Record<string, string | null> = { "NVCF-POLL-SECONDS": "3600" };
+	handlers.before_provider_headers({ type: "before_provider_headers", headers: routed }, ctx);
+	assert.equal(routed["NVCF-POLL-SECONDS"], "5");
+	const direct: Record<string, string | null> = { "NVCF-POLL-SECONDS": "3600" };
+	handlers.before_provider_headers({ type: "before_provider_headers", headers: direct }, { ...ctx, model: { provider: "nvidia", id: "x" } });
+	assert.equal(direct["NVCF-POLL-SECONDS"], "3600");
 });

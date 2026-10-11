@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { kilo, piCatalog, verdict, type Found } from "../scripts/discover.ts";
+import { endpoint, kilo, piCatalog, verdict, type Found } from "../scripts/discover.ts";
 
 test("probe verdicts: rate limits are neutral, keyless auth or payment is a failure (review finding 11)", () => {
 	assert.equal(verdict(403, '{"error":"rate limit exceeded"}', false), "limited", "403 worded as a rate limit");
@@ -42,5 +42,16 @@ test("built-in candidates include pi's live catalog from pi.dev, not just the pi
 		assert.ok((await piCatalog("nvidia", {}, ["live/only-model"])).includes("live/only-model"), "an empty answer counts as a failure");
 	} finally {
 		globalThis.fetch = real;
+	}
+});
+
+test("nightly probes of NVIDIA use the short poll window too, so dead models fail in seconds", () => {
+	const saved = process.env.NVIDIA_API_KEY;
+	process.env.NVIDIA_API_KEY = "test-key";
+	try {
+		assert.equal(endpoint("nvidia/z-ai/glm-5.3")?.headers["NVCF-POLL-SECONDS"], "5");
+	} finally {
+		if (saved === undefined) delete process.env.NVIDIA_API_KEY;
+		else process.env.NVIDIA_API_KEY = saved;
 	}
 });
