@@ -1,0 +1,7 @@
+node_modules/
+data/history.json
+*.log
+*.tmp
+.DS_Store
+.env
+__pycache__/

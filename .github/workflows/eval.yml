@@ -1,0 +1,55 @@
+name: weekly eval
+# Three small coding tasks through pi and vazhi on the top pool models; results feed the ranking.
+# The job that holds provider keys cannot push; the job that pushes holds no keys and runs no npm.
+on:
+  schedule:
+    - cron: "41 2 * * 0"
+  workflow_dispatch:
+concurrency:
+  group: pool
+  cancel-in-progress: false
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm install -g --ignore-scripts @earendil-works/pi-coding-agent@1.1.0
+      - run: python3 -I scripts/eval.py --top 10
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval
+          path: data/eval.json
+          retention-days: 30
+  commit:
+    needs: eval
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: eval
+          path: data
+      - name: Commit data/eval.json if it changed
+        run: |
+          [ -z "$(git status --porcelain -- data/eval.json)" ] && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/eval.json
+          git commit -m "Record this week's pi eval"
+          git pull --rebase
+          git push
