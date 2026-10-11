@@ -45,15 +45,57 @@ const MARKER = "[vazhi: service unavailable, rerouting]";
 const MAX_WAIT = 65 * SECOND;
 
 /**
- * The replacement for a failed message, or undefined to leave it: pi already retries it. Pi never
- * retries some quota wordings even with the marker, so those move to /vazhi and the message says
- * only what failed.
+ * Strip non-retryable quota/billing phrases from an error string so pi's
+ * isRetryableAssistantError classifier will consider the tagged message retryable.
  */
-export function retryable(message: AssistantMessage, key: string, kind: Kind, ms: number): AssistantMessage | undefined {
-	if (isRetryableAssistantError(message)) return undefined;
-	const tagged = { ...message, errorMessage: `${message.errorMessage ?? ""} ${MARKER}` };
-	if (isRetryableAssistantError(tagged)) return tagged;
-	return { ...message, errorMessage: `${key} failed (${kind}), cooling ${formatDuration(ms)}, details in /vazhi ${MARKER}` };
+function sanitizeQuotaWords(text: string): string {
+	return text
+		.replace(/insufficient_quota|quota exceeded|out of budget|billing|GoUsageLimitError|FreeUsageLimitError|Monthly usage limit reached|available balance|subscription_sharing_usage_limit_exceeded/gi, "quota/limit")
+		.replace(/\s+/g, " ")
+		.trim();
+}
+
+/**
+ * Normalize a raw provider error message into a clean one-liner for display.
+ */
+export function summarizeError(raw: string, key: string): string {
+	let text = raw.replace(/\s+/g, " ").trim();
+	try {
+		const parsed = JSON.parse(text);
+		if (parsed.error?.message) {
+			const inner = parsed.error.message;
+			try {
+				const innerParsed = JSON.parse(inner);
+				if (innerParsed.error?.message) text = innerParsed.error.message;
+				else text = inner;
+			} catch {
+				text = inner;
+			}
+		} else if (parsed.message) {
+			text = parsed.message;
+		}
+	} catch {}
+
+	text = sanitizeQuotaWords(text);
+
+	// If raw starts with an HTTP status code like "404", "503", "504", preserve it at the start
+	const statusMatch = raw.match(/^(\d{3})\b/);
+	if (statusMatch) {
+		const status = statusMatch[1];
+		const rest = text.startsWith(status) ? text.slice(status.length).trim() : text;
+		return `${status} (${key}): ${rest.slice(0, 80)}`.replace(/:\s*$/, "");
+	}
+
+	return `${key}: ${text.slice(0, 80)}`;
+}
+
+/**
+ * The replacement for a failed message with a clean error summary + marker so pi retries.
+ */
+export function retryable(message: AssistantMessage, key: string, kind: Kind, ms: number): AssistantMessage {
+	const short = summarizeError(message.errorMessage ?? "", key);
+	const cooling = `cooling ${formatDuration(ms)}, details in /vazhi`;
+	return { ...message, errorMessage: `${short}, ${cooling} ${MARKER}` };
 }
 
 /**

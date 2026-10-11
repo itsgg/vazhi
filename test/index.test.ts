@@ -22,10 +22,11 @@ test("quota errors pi would never retry are rewritten into ones it does", () => 
 	assert.doesNotMatch(out!.errorMessage!, /quota exceeded/);
 });
 
-test("a 404 is tagged and becomes retryable; a 503 is left to pi", () => {
-	const out = retryable({ ...base, errorMessage: '404 "model does not exist"' }, "kilo/x", "gone", 3_600_000);
-	assert.ok(out && isRetryableAssistantError(out) && out.errorMessage!.startsWith("404"));
-	assert.equal(retryable({ ...base, errorMessage: "503 Service Unavailable" }, "a/b", "other", 60_000), undefined);
+test("a 404 or 503 error is summarized and becomes retryable with a clean message", () => {
+	const out404 = retryable({ ...base, errorMessage: '404 "model does not exist"' }, "kilo/x", "gone", 3_600_000);
+	assert.ok(out404 && isRetryableAssistantError(out404) && out404.errorMessage!.startsWith("404"));
+	const out503 = retryable({ ...base, errorMessage: "503 Service Unavailable" }, "a/b", "other", 60_000);
+	assert.ok(out503 && isRetryableAssistantError(out503) && out503.errorMessage!.startsWith("503"));
 });
 
 test("the anonymous placeholder is stripped, a real key is kept", () => {
