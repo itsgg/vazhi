@@ -24,7 +24,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       # Probe history decides when a model counts as down; it lives in the cache, not in git.
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: data/history.json
           key: probe-history-${{ github.run_id }}-${{ github.run_attempt }}
@@ -35,7 +35,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AA_API_KEY: ${{ secrets.AA_API_KEY }}
       - run: npm test
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         with:
           path: data/history.json
           key: probe-history-${{ github.run_id }}-${{ github.run_attempt }}
