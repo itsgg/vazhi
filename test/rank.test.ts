@@ -72,3 +72,18 @@ test("rate-limit records cannot push out the pass that forgives one failure (rev
 	assert.equal(status(h), "ok");
 	assert.ok(h.filter((r) => r.result === "limited").length <= 4);
 });
+
+test("AA slugs and names match provider ids despite vendor prefixes and parentheses", () => {
+	const same: string[][] = [
+		["nvidia-nemotron-3-ultra-550b-a55b", "Nemotron 3 Ultra 550B A55B (Reasoning)", "nvidia/nvidia/nemotron-3-ultra-550b-a55b", "ollama-cloud/nemotron-3-ultra"],
+		["nvidia-nemotron-3-super-120b-a12b", "kilo/nvidia/nemotron-3-super-120b-a12b:free"],
+		["GLM-4.7-Flash (Reasoning)", "zai-free/glm-4.7-flash"],
+	];
+	for (const group of same) assert.equal(new Set(group.map(family)).size, 1, group.join(", "));
+	assert.equal(family("qwen3-5-397b-a17b"), "qwen-3-5", "a model name that starts like a vendor is kept");
+});
+
+test("only mode tags in parentheses are dropped, so sizes stay apart (review finding)", () => {
+	assert.notEqual(family("Foo (7B)"), family("Foo (70B)"));
+	assert.equal(family("Muse Glimmer (High)"), family("muse-glimmer"));
+});
