@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
-import { existsSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, linkSync, mkdtempSync, readFileSync, rmSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -26,6 +26,23 @@ import {
 	Store,
 	type Choice,
 } from "../src/router.ts";
+
+function childExitWithin(child: ReturnType<typeof spawn>, timeoutMs: number, label: string): Promise<number | null> {
+	return new Promise((resolve, reject) => {
+		const timeout = setTimeout(() => {
+			child.kill("SIGKILL");
+			reject(new Error(`${label} timed out after ${timeoutMs} ms`));
+		}, timeoutMs);
+		child.once("error", (error) => {
+			clearTimeout(timeout);
+			reject(error);
+		});
+		child.once("exit", (code) => {
+			clearTimeout(timeout);
+			resolve(code);
+		});
+	});
+}
 
 test("parseRetryAfter reads the wordings providers use, with units", () => {
 	const cases: [string, number | undefined][] = [
@@ -346,7 +363,75 @@ test("a lock is taken over only when stale, and only its owner removes it (revie
 	rmSync(dir, { recursive: true, force: true });
 });
 
-test("stale cleanup cannot delete a replacement lock", async () => {
+async function assertOrphanedClaimRecovered(lockExists: boolean): Promise<void> {
+	const dir = mkdtempSync(join(tmpdir(), "vazhi-orphaned-claim-"));
+	const stateFile = join(dir, "state.json");
+	const lock = `${stateFile}.lock`;
+	const claim = `${lock}.claim`;
+	const worker = join(dir, "update.mts");
+	const router = fileURLToPath(new URL("../src/router.ts", import.meta.url));
+	writeFileSync(lock, "dead-owner");
+	const old = (Date.now() - 10_000) / 1000;
+	utimesSync(lock, old, old);
+	linkSync(lock, claim);
+	if (!lockExists) unlinkSync(lock);
+	writeFileSync(
+		worker,
+		`const { Store } = await import(${JSON.stringify(router)});\n` +
+			`new Store(${JSON.stringify(dir)}).update((state) => { state.dispatched.recovered = [1]; });\n`,
+	);
+	const child = spawn(process.execPath, [worker], { stdio: "inherit" });
+	try {
+		assert.equal(await childExitWithin(child, 2_000, "orphaned claim recovery"), 0);
+		assert.equal(new Store(dir).load().dispatched.recovered[0], 1);
+		assert.equal(existsSync(lock), false);
+		assert.equal(existsSync(claim), false);
+	} finally {
+		child.kill("SIGKILL");
+		rmSync(dir, { recursive: true, force: true });
+	}
+}
+
+test("an orphaned claim with its stale lock cannot deadlock updates", async () => {
+	await assertOrphanedClaimRecovered(true);
+});
+
+test("an orphaned claim after its lock was removed cannot deadlock release", async () => {
+	await assertOrphanedClaimRecovered(false);
+});
+
+test("unsupported hard links fall back without leaking a stale lock", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "vazhi-link-fallback-"));
+	const stateFile = join(dir, "state.json");
+	const lock = `${stateFile}.lock`;
+	const claim = `${lock}.claim`;
+	const worker = join(dir, "update.mts");
+	const routerUrl = new URL("../src/router.ts", import.meta.url);
+	writeFileSync(lock, "dead-owner");
+	const old = (Date.now() - 10_000) / 1000;
+	utimesSync(lock, old, old);
+	writeFileSync(
+		worker,
+		`import fs from "node:fs";\n` +
+			`import { syncBuiltinESMExports } from "node:module";\n` +
+			`fs.linkSync = () => { const error = new Error("unsupported hard link"); error.code = "EPERM"; throw error; };\n` +
+			`syncBuiltinESMExports();\n` +
+			`const { Store } = await import(${JSON.stringify(routerUrl.href)} + "?unsupported-link");\n` +
+			`new Store(${JSON.stringify(dir)}).update((state) => { state.dispatched.fallback = [1]; });\n`,
+	);
+	const child = spawn(process.execPath, [worker], { stdio: "inherit" });
+	try {
+		assert.equal(await childExitWithin(child, 2_000, "unsupported-link fallback"), 0);
+		assert.equal(new Store(dir).load().dispatched.fallback[0], 1);
+		assert.equal(existsSync(lock), false);
+		assert.equal(existsSync(claim), false);
+	} finally {
+		child.kill("SIGKILL");
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test("stale cleanup cannot delete a replacement lock", { timeout: 10_000 }, async () => {
 	const dir = mkdtempSync(join(tmpdir(), "vazhi-replacement-"));
 	const stateFile = join(dir, "state.json");
 	const lock = `${stateFile}.lock`;
@@ -364,10 +449,15 @@ test("stale cleanup cannot delete a replacement lock", async () => {
 		worker,
 		`import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";\n` +
 			`const sleep = () => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2);\n` +
-			`while (!existsSync(${JSON.stringify(trigger)})) sleep();\n` +
+			`let deadline = Date.now() + 2_000;\n` +
+			`while (!existsSync(${JSON.stringify(trigger)})) {\n` +
+			`  if (Date.now() >= deadline) throw new Error("replacement trigger timed out");\n` +
+			`  sleep();\n` +
+			`}\n` +
 			`unlinkSync(${JSON.stringify(lock)});\n` +
 			`writeFileSync(${JSON.stringify(lock)}, ${JSON.stringify(token)}, { flag: "wx" });\n` +
 			`writeFileSync(${JSON.stringify(replacementReady)}, "");\n` +
+			`deadline = Date.now() + 2_000;\n` +
 			`for (;;) {\n` +
 			`  let current;\n` +
 			`  try { current = readFileSync(${JSON.stringify(lock)}, "utf8"); } catch { current = undefined; }\n` +
@@ -377,11 +467,16 @@ test("stale cleanup cannot delete a replacement lock", async () => {
 			`    writeFileSync(${JSON.stringify(outcome)}, "released");\n` +
 			`    break;\n` +
 			`  }\n` +
+			`  if (Date.now() >= deadline) {\n` +
+			`    unlinkSync(${JSON.stringify(lock)});\n` +
+			`    writeFileSync(${JSON.stringify(outcome)}, "handshake-timeout");\n` +
+			`    throw new Error("next inspection timed out");\n` +
+			`  }\n` +
 			`  sleep();\n` +
 			`}\n`,
 	);
 	const child = spawn(process.execPath, [worker], { stdio: "inherit" });
-	const childExit = new Promise<number | null>((resolve) => child.on("exit", resolve));
+	const childExit = childExitWithin(child, 5_000, "replacement owner");
 	const originalStatSync = fs.statSync;
 	const mutableFs = fs as { statSync: typeof fs.statSync };
 	let inspections = 0;

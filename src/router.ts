@@ -219,6 +219,10 @@ function sleepSync(ms: number): void {
 	Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
+const CLAIM_WAIT = 100;
+type DeleteResult = "done" | "busy" | "fallback";
+type DeleteCondition = (path: string, token: string) => boolean;
+
 /** The cooldown state in one directory, shared by every pi process through a lock file. */
 export class Store {
 	readonly dir: string;
@@ -257,25 +261,26 @@ export class Store {
 	}
 
 	/**
-	 * Serialize deletion through a hard link that keeps the inspected inode stable. Returns false
-	 * when another process owns the claim, so the caller can wait and retry.
+	 * Prefer deletion through a hard-link snapshot. A busy claim may be orphaned by a killed
+	 * process, and some filesystems reject hard links, so callers eventually use the bounded
+	 * token-checked fallback below.
 	 */
-	private deleteLockIf(shouldDelete: (claimedToken: string) => boolean): boolean {
+	private deleteLockIf(shouldDelete: DeleteCondition): DeleteResult {
 		try {
 			linkSync(this.lock, this.claim);
 		} catch (error) {
 			const code = (error as NodeJS.ErrnoException).code;
-			if (code === "EEXIST") return false;
-			if (code === "ENOENT") return true;
-			throw error;
+			if (code === "EEXIST") return "busy";
+			if (code === "ENOENT") return "done";
+			return "fallback";
 		}
 		try {
 			const claimedToken = readFileSync(this.claim, "utf8");
-			if (!shouldDelete(claimedToken)) return true;
+			if (!shouldDelete(this.claim, claimedToken)) return "done";
 			if (readFileSync(this.lock, "utf8") === claimedToken) unlinkSync(this.lock);
-			return true;
+			return "done";
 		} catch (error) {
-			if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
+			if ((error as NodeJS.ErrnoException).code === "ENOENT") return "done";
 			throw error;
 		} finally {
 			try {
@@ -285,9 +290,39 @@ export class Store {
 	}
 
 	/**
-	 * Load, change and save the state as one step across processes. The lock holds its owner's
-	 * token; a waiter takes it over only once it is 5 s old, which means its holder died, since
-	 * every holder releases it within milliseconds.
+	 * Node has no compare-and-unlink operation. This double token check retains the previous
+	 * ownership guard but has a narrow replacement race between the final read and unlink. It is
+	 * used only after a bounded claim wait or when hard links are unavailable, to preserve liveness.
+	 */
+	private deleteLockFallback(shouldDelete: DeleteCondition): void {
+		const tokenCheckedUnlink = (path: string, condition: DeleteCondition): void => {
+			try {
+				const token = readFileSync(path, "utf8");
+				if (condition(path, token) && readFileSync(path, "utf8") === token) unlinkSync(path);
+			} catch {}
+		};
+		tokenCheckedUnlink(this.lock, shouldDelete);
+		tokenCheckedUnlink(this.claim, () => true);
+	}
+
+	/** Wait briefly for a live claimant, then guarantee that lock cleanup returns. */
+	private deleteLockEventually(shouldDelete: DeleteCondition): void {
+		const deadline = Date.now() + CLAIM_WAIT;
+		for (;;) {
+			const result = this.deleteLockIf(shouldDelete);
+			if (result === "done") return;
+			if (result === "fallback" || Date.now() >= deadline) {
+				this.deleteLockFallback(shouldDelete);
+				return;
+			}
+			sleepSync(5);
+		}
+	}
+
+	/**
+	 * Load, change and save the state as one step across processes. A waiter takes a lock over
+	 * once it is 5 s old. Hard-link claims make deletion ownership-safe; orphaned claims and
+	 * filesystems without hard links fall back after a bounded wait so updates cannot deadlock.
 	 */
 	update<T>(change: (state: State) => T): T {
 		mkdirSync(this.dir, { recursive: true });
@@ -299,7 +334,7 @@ export class Store {
 			} catch (error) {
 				if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
 				try {
-					this.deleteLockIf(() => Date.now() - statSync(this.claim).mtimeMs > 5 * SECOND);
+					this.deleteLockEventually((path) => Date.now() - statSync(path).mtimeMs > 5 * SECOND);
 				} catch {}
 				sleepSync(5);
 			}
@@ -311,7 +346,7 @@ export class Store {
 			return result;
 		} finally {
 			try {
-				while (!this.deleteLockIf((claimedToken) => claimedToken === token)) sleepSync(5);
+				this.deleteLockEventually((_path, claimedToken) => claimedToken === token);
 			} catch {}
 		}
 	}
