@@ -8,6 +8,11 @@ updates:
     groups:
       pi:
         patterns: ["@earendil-works/*"]
+    ignore:
+      # vazhi supports Node 22.19 and up, pi's own minimum. Types for a newer Node would let the
+      # typecheck pass code that calls APIs Node 22 users do not have.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
