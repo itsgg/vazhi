@@ -1,0 +1,22 @@
+{
+  "_comment": "Rows CI cannot list or probe without keys it does not hold, and OVH metadata its catalog lacks. Ollama's free starter set is from a third-party probe on 2026-09-02 (gpt-oss:120b, gemma4:31b, nemotron-3-ultra answered; minimax-m3 returned 402).",
+  "models": {
+    "ollama-cloud": [
+      { "id": "nemotron-3-ultra", "name": "Nemotron 3 Ultra (Ollama Cloud)", "reasoning": true, "input": ["text"], "contextWindow": 262144, "maxTokens": 65536 },
+      { "id": "gpt-oss:120b", "name": "gpt-oss 120B (Ollama Cloud)", "reasoning": true, "input": ["text"], "contextWindow": 131072, "maxTokens": 32768 },
+      { "id": "gemma4:31b", "name": "Gemma 4 31B (Ollama Cloud)", "reasoning": true, "input": ["text"], "contextWindow": 262144, "maxTokens": 32768 }
+    ],
+    "zai-free": [
+      { "id": "glm-4.7-flash", "name": "GLM 4.7 Flash (Z.ai free)", "reasoning": true, "input": ["text"], "contextWindow": 200000, "maxTokens": 65536 }
+    ]
+  },
+  "builtin": ["cloudflare-workers-ai/@cf/zai-org/glm-4.7-flash"],
+  "ovh": {
+    "default": { "reasoning": true, "input": ["text"], "contextWindow": 131072, "maxTokens": 16384 },
+    "Qwen3.5-397B-A17B": { "reasoning": true, "input": ["text", "image"], "contextWindow": 262144, "maxTokens": 32768 },
+    "Qwen3.8-27B": { "reasoning": true, "input": ["text", "image"], "contextWindow": 262144, "maxTokens": 32768 },
+    "Qwen3.6-27B": { "reasoning": true, "input": ["text", "image"], "contextWindow": 262144, "maxTokens": 32768 },
+    "gpt-oss-120b": { "reasoning": true, "input": ["text"], "contextWindow": 131072, "maxTokens": 32768 },
+    "gpt-oss-20b": { "reasoning": true, "input": ["text"], "contextWindow": 131072, "maxTokens": 8192 }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "_comment": "Never put these in the pool, whatever the catalogs say. Each entry carries its reason and date.",
+  "models": {
+    "google/gemini-3.7-flash": "Google routes it to gemini-3.8-flash since 2026-10-08, so it shares that quota",
+    "google/gemini-3.5-flash": "Google routes it to gemini-3.6-flash, so it shares that quota",
+    "google/gemma-4-31b-it": "16K tokens per minute on the Gemini API since 2026-07-14, below one pi turn",
+    "google/gemma-4-26b-a4b-it": "16K tokens per minute on the Gemini API since 2026-07-14, below one pi turn"
+  },
+  "patterns": ["content-safety", "guard", "lyria", "embed", "whisper", "tts", "stable-diffusion", "bge-", "diffusion", "cosmos", "vision", "omni"]
+}

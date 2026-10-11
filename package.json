@@ -1,0 +1,57 @@
+{
+  "name": "vazhi",
+  "version": "0.1.0",
+  "description": "Free LLM auto-router for the pi coding agent: every request goes to the best free model that is up, from a model list rebuilt nightly.",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "coding-agent",
+    "llm",
+    "router",
+    "free",
+    "nvidia-nim",
+    "openrouter",
+    "gemini"
+  ],
+  "author": "itsgg <me@itsgg.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsgg/vazhi.git"
+  },
+  "homepage": "https://github.com/itsgg/vazhi#readme",
+  "bugs": {
+    "url": "https://github.com/itsgg/vazhi/issues"
+  },
+  "files": [
+    "src",
+    "pool.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "discover": "node scripts/discover.ts",
+    "eval": "python3 -I scripts/eval.py"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "1.1.0",
+    "@earendil-works/pi-coding-agent": "1.1.0",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.0"
+  }
+}

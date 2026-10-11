@@ -1,0 +1,29 @@
+{
+  "_comment": "Manual quality scores on roughly the Artificial Analysis coding-index scale, keyed by model family (scripts/rank.ts family()). Used only where the AA API does not cover a model. Set from the 2026-10-11 review: independent agentic-coding benchmarks (Terminal-Bench, DeepSWE, AA Terminal-Bench 2.1) and a live pi eval. Higher is better.",
+  "scores": {
+    "glm-5-3": 50,
+    "gemini-3-8-flash": 48,
+    "kimi-k-3": 47,
+    "glm-5-3-flash": 46,
+    "qwen-3-8-27b": 42,
+    "nemotron-3-ultra": 40,
+    "deepseek-v-4-1-flash": 40,
+    "deepseek-v-4-pro": 38,
+    "laguna-s-2-1": 34,
+    "qwen-3-5": 33,
+    "qwen-3-6-27b": 32,
+    "gemini-3-6-flash": 30,
+    "deepseek-v-4-flash": 30,
+    "nemotron-3-super": 28,
+    "gemini-3-5-flash-lite": 22,
+    "gpt-oss-120b": 22,
+    "gemma-4-31b": 20,
+    "north-mini-code": 20,
+    "glm-4-7-flash": 18,
+    "nemotron-3-5-lightning": 15,
+    "minimax-m-3": 15,
+    "free": 15,
+    "gpt-oss-20b": 12,
+    "mistral-medium-3-5": 10
+  }
+}
