@@ -10,7 +10,8 @@
  * and come back once they answer.
  */
 
-export const DEFAULT_SCORE = 10;
+/** For a model with neither an AA score nor a seed: low on the AA coding-index scale. */
+export const DEFAULT_SCORE = 17;
 export const POOL_SIZE = 40;
 
 /** Free capacity per provider, as a multiplier. From the 2026-10-11 limits review. */
@@ -31,12 +32,20 @@ export const CAPACITY: Record<string, number> = {
 export const RPM: Record<string, number> = { ovh: 2 };
 
 /**
- * One name per model family across providers and AA slugs: "Qwen3.5-397B-A17B", "qwen3-5-397b-a17b"
- * and "qwen/qwen3.5-397b-a17b:free" all become "qwen-3-5".
+ * One name per model family across providers and AA slugs and names: "Qwen3.5-397B-A17B",
+ * "qwen3-5-397b-a17b" and "qwen/qwen3.5-397b-a17b:free" all become "qwen-3-5", and AA's
+ * "nvidia-nemotron-3-ultra-550b-a55b" or "Nemotron 3 Ultra 550B A55B (Reasoning)" become
+ * "nemotron-3-ultra", as provider ids do.
  */
 export function family(id: string): string {
-	let s = id.toLowerCase().split("/").pop() ?? "";
+	// Only mode tags: "(7B)" and "(70B)" are different models and must stay apart.
+	let s = id
+		.toLowerCase()
+		.replace(/\s*\((reasoning|non-reasoning|thinking|minimal|low|medium|high|xhigh|max|adaptive)\)/g, "")
+		.split("/")
+		.pop() ?? "";
 	s = s.replace(/:free$/, "").replace(/[:_ .]/g, "-");
+	s = s.replace(/^(nvidia|meta|ibm|microsoft|amazon)-(?=[a-z])/, ""); // vendor prefix in AA slugs
 	s = s.replace(/-(reasoning|non-reasoning|thinking|xhigh|high|medium|low|max|adaptive)$/, "");
 	s = s.replace(/-(it|instruct|chat)$/, "");
 	s = s.replace(/-\d+b-a\d+b$/, ""); // MoE size: -550b-a55b
