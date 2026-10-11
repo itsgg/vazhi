@@ -21,6 +21,7 @@ import {
 	coolingReason,
 	emptyState,
 	formatDuration,
+	isGemini3,
 	keyOf,
 	noteStart,
 	penalize,
@@ -29,6 +30,7 @@ import {
 	recover,
 	reserve,
 	SECOND,
+	signatureConstraint,
 	splitKey,
 	Store,
 	type Kind,
@@ -216,11 +218,20 @@ export default function (pi: ExtensionAPI) {
 			const failed = request.reason === "retry" && request.failed ? keyOf(request.failed.model) : undefined;
 			// Credentials are rechecked on every attempt; the pool stays the turn's.
 			let candidates: { entry: PoolEntry; model: Model<Api> }[] = [];
+			const constraint = signatureConstraint(request.messages);
 			const choice = await pickWithin(
 				() => {
 					candidates = credentialed(ctx, turn.pool.pool);
 					if (candidates.length === 0) throw new Error("vazhi: no pool model has credentials; run /vazhi to see the pool");
-					const entries = candidates.map((c) => c.entry);
+					let entries = candidates.map((c) => c.entry);
+					if (constraint) {
+						const eligible = entries.filter((e) => {
+							const { provider, id } = splitKey(e.model);
+							if (provider !== "google" || !isGemini3(id)) return true;
+							return e.model === constraint;
+						});
+						if (eligible.length > 0) entries = eligible;
+					}
 					return store.update((state) => {
 						const now = Date.now();
 						const c = choose(entries, state, now, previous, failed);

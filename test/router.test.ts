@@ -12,12 +12,14 @@ import {
 	emptyState,
 	HOUR,
 	MINUTE,
+	isGemini3,
 	noteStart,
 	parseRetryAfter,
 	penalize,
 	pickWithin,
 	recover,
 	reserve,
+	signatureConstraint,
 	Store,
 	type Choice,
 } from "../src/router.ts";
@@ -55,6 +57,69 @@ test("classify puts each error in the right kind", () => {
 		["Request timed out.", "slow"],
 	];
 	for (const [text, want] of cases) assert.equal(classify(text).kind, want, text);
+});
+
+test("classify: thought_signature errors are client errors", () => {
+	assert.equal(classify("Function call is missing a thought_signature in functionCall parts").kind, "client");
+	assert.equal(classify("Function call is missing a thoughtSignature in functionCall parts").kind, "client");
+	assert.equal(classify("Thought signature required for function call").kind, "client");
+});
+
+test("isGemini3 detects Gemini 3+ models", () => {
+	assert.ok(isGemini3("gemini-3.5-flash"));
+	assert.ok(isGemini3("gemini-3.8-flash"));
+	assert.ok(isGemini3("gemini-live-3.5"));
+	assert.ok(!isGemini3("gemini-2.5-flash"));
+	assert.ok(!isGemini3("gemini-1.5-pro"));
+	assert.ok(!isGemini3("gpt-4"));
+	assert.ok(!isGemini3("claude-3-opus"));
+});
+
+test("signatureConstraint: no tool calls -> no constraint", () => {
+	const messages = [
+		{ role: "user", content: [{ type: "text", text: "hi" }] },
+		{ role: "assistant", content: [{ type: "text", text: "hello" }] },
+	];
+	assert.equal(signatureConstraint(messages), undefined);
+});
+
+test("signatureConstraint: non-Gemini tool call -> blocks all Gemini 3", () => {
+	const messages = [
+		{ role: "assistant", provider: "nvidia", model: "z-ai/glm-5.3", content: [
+			{ type: "toolCall", id: "1", name: "foo", arguments: {} }
+		] },
+	];
+	assert.equal(signatureConstraint(messages), undefined);
+});
+
+test("signatureConstraint: single Gemini 3 signed tool call -> only that model allowed", () => {
+	const messages = [
+		{ role: "assistant", provider: "google", model: "gemini-3.8-flash", content: [
+			{ type: "toolCall", id: "1", name: "foo", arguments: {}, thoughtSignature: "YQ==" }
+		] },
+	];
+	assert.equal(signatureConstraint(messages), "google/gemini-3.8-flash");
+});
+
+test("signatureConstraint: two different Gemini 3 signers -> no Gemini 3 allowed", () => {
+	const messages = [
+		{ role: "assistant", provider: "google", model: "gemini-3.8-flash", content: [
+			{ type: "toolCall", id: "1", name: "foo", arguments: {}, thoughtSignature: "YQ==" }
+		] },
+		{ role: "assistant", provider: "google", model: "gemini-3.6-flash", content: [
+			{ type: "toolCall", id: "2", name: "bar", arguments: {}, thoughtSignature: "Yg==" }
+		] },
+	];
+	assert.equal(signatureConstraint(messages), undefined);
+});
+
+test("signatureConstraint: invalid signature -> no Gemini 3 allowed", () => {
+	const messages = [
+		{ role: "assistant", provider: "google", model: "gemini-3.8-flash", content: [
+			{ type: "toolCall", id: "1", name: "foo", arguments: {}, thoughtSignature: "not-base64" }
+		] },
+	];
+	assert.equal(signatureConstraint(messages), undefined);
 });
 
 test("penalize never shortens a cooldown", () => {

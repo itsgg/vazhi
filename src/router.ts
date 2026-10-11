@@ -84,7 +84,7 @@ const KINDS: { kind: Kind; pattern: RegExp; base: number; max: number }[] = [
 		base: 30 * SECOND,
 		max: 30 * MINUTE,
 	},
-	{ kind: "client", pattern: /\b(400|413|422)\b|bad request|invalid request|unprocessable/i, base: 5 * MINUTE, max: 5 * MINUTE },
+	{ kind: "client", pattern: /\b(400|413|422)\b|bad request|invalid request|unprocessable|thought.?signature/i, base: 5 * MINUTE, max: 5 * MINUTE },
 	{ kind: "other", pattern: /[\s\S]*/, base: MINUTE, max: 30 * MINUTE },
 ];
 
@@ -100,6 +100,57 @@ function record(value: unknown): Record<string, any> {
 
 function num(value: unknown): number {
 	return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+const SIGNATURE_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
+
+function isGemini3(modelId: string): boolean {
+	const match = modelId.toLowerCase().match(/^gemini(?:-live)?-(\d+)/);
+	return match !== null && Number(match[1]) >= 3;
+}
+
+export { isGemini3 };
+
+function validSignature(value: unknown): boolean {
+	return typeof value === "string" && value.length > 0 && value.length % 4 === 0 && SIGNATURE_PATTERN.test(value);
+}
+
+/**
+ * Gemini 3 models require every replayed functionCall to carry the thought signature the
+ * model that made it received, and pi only replays a signature to that exact provider+model.
+ * If the conversation has signed tool calls from one Gemini 3 model, only that model can
+ * serve it; if from multiple (or any without a valid signature), no Gemini 3 model can.
+ * Return the single model that may serve, or undefined to block all Gemini 3 models for this
+ * conversation.
+ */
+export function signatureConstraint(messages: readonly unknown[]): string | undefined {
+	let only: string | undefined;
+	let broken = false;
+	for (const message of messages) {
+		const m = message as { role?: string; provider?: string; model?: string; content?: readonly unknown[] };
+		if (m?.role !== "assistant" || !Array.isArray(m.content)) continue;
+		const from = m.provider && m.model ? `${m.provider}/${m.model}` : undefined;
+		for (const block of m.content) {
+			const b = block as { type?: string; thoughtSignature?: unknown };
+			if (b?.type !== "toolCall") continue;
+			// Any tool call from a Gemini 3 model (any provider) constrains the conversation.
+			const isGemini3Call = from && isGemini3(from.split("/")[1] ?? "");
+			if (!from || !isGemini3Call) {
+				// Non-Gemini tool call has no signature → breaks every Gemini 3 target.
+				broken = true;
+				continue;
+			}
+			if (!validSignature(b.thoughtSignature)) {
+				// Invalid signature → even the original model can't replay it.
+				broken = true;
+				continue;
+			}
+			if (only === undefined) only = from;
+			else if (only !== from) broken = true;
+		}
+	}
+	if (broken || only === undefined) return undefined; // no Gemini 3 model may serve
+	return only;
 }
 
 export function splitKey(key: string): { provider: string; id: string } {
