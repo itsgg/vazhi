@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-11T10:53:39.315Z",
+  "generated": "2026-10-11T11:05:54.116Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -230,8 +230,8 @@
     },
     {
       "model": "google/gemini-3.8-flash",
-      "score": 58,
-      "status": "unverified"
+      "score": 61,
+      "status": "ok"
     },
     {
       "model": "ovh/Qwen3.8-27B",
@@ -241,8 +241,8 @@
     },
     {
       "model": "google/gemini-3.6-flash",
-      "score": 52.6,
-      "status": "unverified"
+      "score": 55.4,
+      "status": "ok"
     },
     {
       "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
@@ -287,14 +287,14 @@
       "status": "unverified"
     },
     {
-      "model": "nvidia/nvidia/nemotron-3-super-120b-a12b",
-      "score": 37.7,
+      "model": "google/gemini-3.5-flash-lite",
+      "score": 39.4,
       "status": "ok"
     },
     {
-      "model": "google/gemini-3.5-flash-lite",
-      "score": 37.5,
-      "status": "unverified"
+      "model": "nvidia/nvidia/nemotron-3-super-120b-a12b",
+      "score": 37.7,
+      "status": "ok"
     },
     {
       "model": "ollama-cloud/nemotron-3-ultra",
@@ -342,6 +342,11 @@
       "status": "unverified"
     },
     {
+      "model": "google/gemini-3.1-flash-lite",
+      "score": 27.8,
+      "status": "ok"
+    },
+    {
       "model": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
       "score": 26.8,
       "status": "ok"
@@ -349,11 +354,6 @@
     {
       "model": "zai-free/glm-4.7-flash",
       "score": 26.5,
-      "status": "unverified"
-    },
-    {
-      "model": "google/gemini-3.1-flash-lite",
-      "score": 26.4,
       "status": "unverified"
     },
     {
