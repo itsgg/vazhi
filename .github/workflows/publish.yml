@@ -1,4 +1,6 @@
 name: publish
+# Publishes to npm on a version tag through npm trusted publishing: GitHub's OIDC identity stands in
+# for a token, so none is stored. Configured on npmjs.com for itsgg/vazhi and this file's name.
 on:
   push:
     tags: ["v*"]
@@ -10,14 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run typecheck
       - run: npm test
-      - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Tag matches package.json
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npm install -g --ignore-scripts npm@^11.5.1
+      - run: npm publish --access public
