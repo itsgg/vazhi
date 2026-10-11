@@ -33,6 +33,7 @@ import {
 	signatureConstraint,
 	splitKey,
 	Store,
+	type SignatureConstraint,
 	type Kind,
 	type PoolEntry,
 } from "./router.ts";
@@ -149,6 +150,16 @@ function credentialed(ctx: ExtensionContext, pool: PoolEntry[]): { entry: PoolEn
 	});
 }
 
+function eligibleForSignature(entries: PoolEntry[], constraint: SignatureConstraint): PoolEntry[] {
+	return entries.filter((e) => {
+		const { provider, id } = splitKey(e.model);
+		if (provider !== "google" || !isGemini3(id)) return true;
+		if (constraint.mode === "unrestricted") return true;
+		if (constraint.mode === "blocked") return false;
+		return e.model === constraint.model;
+	});
+}
+
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
 	return new Promise((resolve, reject) => {
 		if (signal?.aborted) return reject(new Error("vazhi: aborted"));
@@ -223,14 +234,14 @@ export default function (pi: ExtensionAPI) {
 				() => {
 					candidates = credentialed(ctx, turn.pool.pool);
 					if (candidates.length === 0) throw new Error("vazhi: no pool model has credentials; run /vazhi to see the pool");
-					let entries = candidates.map((c) => c.entry);
-					if (constraint) {
-						const eligible = entries.filter((e) => {
-							const { provider, id } = splitKey(e.model);
-							if (provider !== "google" || !isGemini3(id)) return true;
-							return e.model === constraint;
-						});
-						if (eligible.length > 0) entries = eligible;
+					let entries = eligibleForSignature(
+						candidates.map((c) => c.entry),
+						constraint,
+					);
+					if (entries.length === 0) {
+						throw new Error(
+							"vazhi: no pool model matches Gemini thought-signature compatibility for this conversation; adjust the pool or start a new turn",
+						);
 					}
 					return store.update((state) => {
 						const now = Date.now();

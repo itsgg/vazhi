@@ -75,33 +75,33 @@ test("isGemini3 detects Gemini 3+ models", () => {
 	assert.ok(!isGemini3("claude-3-opus"));
 });
 
-test("signatureConstraint: no tool calls -> no constraint", () => {
+test("signatureConstraint: no tool calls -> unrestricted", () => {
 	const messages = [
 		{ role: "user", content: [{ type: "text", text: "hi" }] },
 		{ role: "assistant", content: [{ type: "text", text: "hello" }] },
 	];
-	assert.equal(signatureConstraint(messages), undefined);
+	assert.deepEqual(signatureConstraint(messages), { mode: "unrestricted" });
 });
 
-test("signatureConstraint: non-Gemini tool call -> blocks all Gemini 3", () => {
+test("signatureConstraint: non-Gemini tool call -> blocked", () => {
 	const messages = [
 		{ role: "assistant", provider: "nvidia", model: "z-ai/glm-5.3", content: [
 			{ type: "toolCall", id: "1", name: "foo", arguments: {} }
 		] },
 	];
-	assert.equal(signatureConstraint(messages), undefined);
+	assert.deepEqual(signatureConstraint(messages), { mode: "blocked" });
 });
 
-test("signatureConstraint: single Gemini 3 signed tool call -> only that model allowed", () => {
+test("signatureConstraint: single Gemini 3 signed tool call -> pinned to that model", () => {
 	const messages = [
 		{ role: "assistant", provider: "google", model: "gemini-3.8-flash", content: [
 			{ type: "toolCall", id: "1", name: "foo", arguments: {}, thoughtSignature: "YQ==" }
 		] },
 	];
-	assert.equal(signatureConstraint(messages), "google/gemini-3.8-flash");
+	assert.deepEqual(signatureConstraint(messages), { mode: "pinned", model: "google/gemini-3.8-flash" });
 });
 
-test("signatureConstraint: two different Gemini 3 signers -> no Gemini 3 allowed", () => {
+test("signatureConstraint: two different Gemini 3 signers -> blocked", () => {
 	const messages = [
 		{ role: "assistant", provider: "google", model: "gemini-3.8-flash", content: [
 			{ type: "toolCall", id: "1", name: "foo", arguments: {}, thoughtSignature: "YQ==" }
@@ -110,16 +110,16 @@ test("signatureConstraint: two different Gemini 3 signers -> no Gemini 3 allowed
 			{ type: "toolCall", id: "2", name: "bar", arguments: {}, thoughtSignature: "Yg==" }
 		] },
 	];
-	assert.equal(signatureConstraint(messages), undefined);
+	assert.deepEqual(signatureConstraint(messages), { mode: "blocked" });
 });
 
-test("signatureConstraint: invalid signature -> no Gemini 3 allowed", () => {
+test("signatureConstraint: invalid signature -> blocked", () => {
 	const messages = [
 		{ role: "assistant", provider: "google", model: "gemini-3.8-flash", content: [
 			{ type: "toolCall", id: "1", name: "foo", arguments: {}, thoughtSignature: "not-base64" }
 		] },
 	];
-	assert.equal(signatureConstraint(messages), undefined);
+	assert.deepEqual(signatureConstraint(messages), { mode: "blocked" });
 });
 
 test("penalize never shortens a cooldown", () => {

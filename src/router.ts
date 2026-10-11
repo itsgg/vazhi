@@ -115,17 +115,21 @@ function validSignature(value: unknown): boolean {
 	return typeof value === "string" && value.length > 0 && value.length % 4 === 0 && SIGNATURE_PATTERN.test(value);
 }
 
+export type SignatureConstraint =
+	| { mode: "unrestricted" }
+	| { mode: "blocked" }
+	| { mode: "pinned"; model: string };
+
 /**
  * Gemini 3 models require every replayed functionCall to carry the thought signature the
  * model that made it received, and pi only replays a signature to that exact provider+model.
  * If the conversation has signed tool calls from one Gemini 3 model, only that model can
  * serve it; if from multiple (or any without a valid signature), no Gemini 3 model can.
- * Return the single model that may serve, or undefined to block all Gemini 3 models for this
- * conversation.
  */
-export function signatureConstraint(messages: readonly unknown[]): string | undefined {
+export function signatureConstraint(messages: readonly unknown[]): SignatureConstraint {
 	let only: string | undefined;
 	let broken = false;
+	let sawToolCall = false;
 	for (const message of messages) {
 		const m = message as { role?: string; provider?: string; model?: string; content?: readonly unknown[] };
 		if (m?.role !== "assistant" || !Array.isArray(m.content)) continue;
@@ -133,6 +137,7 @@ export function signatureConstraint(messages: readonly unknown[]): string | unde
 		for (const block of m.content) {
 			const b = block as { type?: string; thoughtSignature?: unknown };
 			if (b?.type !== "toolCall") continue;
+			sawToolCall = true;
 			// Any tool call from a Gemini 3 model (any provider) constrains the conversation.
 			const isGemini3Call = from && isGemini3(from.split("/")[1] ?? "");
 			if (!from || !isGemini3Call) {
@@ -149,8 +154,9 @@ export function signatureConstraint(messages: readonly unknown[]): string | unde
 			else if (only !== from) broken = true;
 		}
 	}
-	if (broken || only === undefined) return undefined; // no Gemini 3 model may serve
-	return only;
+	if (!sawToolCall) return { mode: "unrestricted" };
+	if (broken || only === undefined) return { mode: "blocked" };
+	return { mode: "pinned", model: only };
 }
 
 export function splitKey(key: string): { provider: string; id: string } {

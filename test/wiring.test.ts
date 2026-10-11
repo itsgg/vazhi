@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
@@ -14,10 +14,15 @@ after(() => {
 	for (const d of dirs) rmSync(d, { recursive: true, force: true });
 });
 
-function load() {
+function load(options?: { pool?: { model: string }[] }) {
 	const dir = mkdtempSync(join(tmpdir(), "vazhi-wiring-"));
 	dirs.push(dir);
 	process.env.PI_CODING_AGENT_DIR = dir;
+	if (options?.pool) {
+		const vazhi = join(dir, "vazhi");
+		mkdirSync(vazhi, { recursive: true });
+		writeFileSync(join(vazhi, "config.json"), JSON.stringify({ pool: options.pool, autoUpdate: false }));
+	}
 	const handlers: Record<string, Function> = {};
 	const registered: Record<string, string[]>[] = [];
 	let virtual: any;
@@ -55,6 +60,56 @@ test("a failure from a model a pool update removed still reroutes (review findin
 	};
 	const out = handlers.message_end({ type: "message_end", message }, ctx);
 	assert.match(out?.message?.errorMessage ?? "", /vazhi: service unavailable, rerouting/);
+});
+
+test("route: incompatible tool history skips Gemini 3 for the next model in pool order", async () => {
+	const { virtual } = load({
+		pool: [{ model: "google/gemini-3.8-flash" }, { model: "kilo/sig-fallback:free" }],
+	});
+	const routeCtx = {
+		...ctx,
+		modelRegistry: {
+			find: (provider: string, id: string) => ({ provider, id }),
+			hasConfiguredAuth: () => true,
+		},
+	};
+	const messages = [
+		{
+			role: "assistant",
+			provider: "nvidia",
+			model: "z-ai/glm-5.3",
+			content: [{ type: "toolCall", id: "1", name: "foo", arguments: {} }],
+		},
+	];
+	const route = await virtual.route({ reason: "user", thinkingLevel: "medium", messages }, routeCtx);
+	assert.equal(`${route.model.provider}/${route.model.id}`, "kilo/sig-fallback:free");
+});
+
+test("route: signed Gemini conversation stays on that exact model", async () => {
+	const { virtual } = load({
+		pool: [
+			{ model: "google/gemini-3.6-flash" },
+			{ model: "google/gemini-3.8-flash" },
+			{ model: "kilo/sig-fallback:free" },
+		],
+	});
+	const routeCtx = {
+		...ctx,
+		modelRegistry: {
+			find: (provider: string, id: string) => ({ provider, id }),
+			hasConfiguredAuth: () => true,
+		},
+	};
+	const messages = [
+		{
+			role: "assistant",
+			provider: "google",
+			model: "gemini-3.8-flash",
+			content: [{ type: "toolCall", id: "1", name: "foo", arguments: {}, thoughtSignature: "YQ==" }],
+		},
+	];
+	const route = await virtual.route({ reason: "user", thinkingLevel: "medium", messages }, routeCtx);
+	assert.equal(`${route.model.provider}/${route.model.id}`, "google/gemini-3.8-flash");
 });
 
 test("route picks a fresh model each attempt and returns the first ready one", async () => {
