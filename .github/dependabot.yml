@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # Keeps the pinned pi current, so tests and the bundled catalog track what users run.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      pi:
+        patterns: ["@earendil-works/*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

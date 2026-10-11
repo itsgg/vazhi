@@ -80,7 +80,7 @@ test("loadPool: newer nightly beats bundled; config can exclude, prefer and repl
 	rmSync(dir, { recursive: true, force: true });
 });
 
-test("refreshRemote fetches at most every 12 hours, keeps the cache on failure, honours autoUpdate", async () => {
+test("refreshRemote fetches every 12 hours, retries an hour after a failure, honours autoUpdate", async () => {
 	const dir = mkdtempSync(join(tmpdir(), "vazhi-refresh-"));
 	let calls = 0;
 	const serve = (body: unknown, status = 200) =>
@@ -98,9 +98,35 @@ test("refreshRemote fetches at most every 12 hours, keeps the cache on failure, 
 	assert.equal(await refreshRemote(dir, { fetch: serve({ nope: true }), now: later }), false, "bad body");
 	const cached = JSON.parse(readFileSync(join(dir, "pool-cache.json"), "utf8"));
 	assert.equal(cached.pool.generated, "2026-10-02", "failure keeps the last good pool");
+	assert.equal(calls, 2);
+
+	const minute = 60 * 1000;
+	assert.equal(await refreshRemote(dir, { fetch: serve(pool("2026-10-03", ["nvidia/b"])), now: later + 30 * minute }), false);
+	assert.equal(calls, 2, "a failed try waits an hour");
+	assert.equal(await refreshRemote(dir, { fetch: serve(pool("2026-10-03", ["nvidia/b"])), now: later + 61 * minute }), true);
+	assert.equal(calls, 3, "an hour after a failure it tries again, not 12 hours later");
 
 	writeFileSync(join(dir, "config.json"), JSON.stringify({ autoUpdate: false }));
 	assert.equal(await refreshRemote(dir, { fetch: serve(pool("2026-10-04", ["nvidia/c"])), now: later * 2, force: true }), false);
-	assert.equal(calls, 2, "autoUpdate false never fetches");
+	assert.equal(calls, 3, "autoUpdate false never fetches");
+	rmSync(dir, { recursive: true, force: true });
+});
+
+test("a failed download that ends after a successful one keeps the new pool (review of the update change, 2)", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "vazhi-race-"));
+	let failSlow!: () => void;
+	const slowFailure = (async () => {
+		await new Promise<void>((r) => (failSlow = r));
+		throw new Error("network down");
+	}) as unknown as typeof fetch;
+	const success = (async () => new Response(JSON.stringify(pool("2026-10-05", ["nvidia/new"])))) as unknown as typeof fetch;
+
+	const a = refreshRemote(dir, { fetch: slowFailure, now: 1_000, force: true });
+	assert.equal(await refreshRemote(dir, { fetch: success, now: 1_500, force: true }), true);
+	failSlow();
+	assert.equal(await a, false);
+	const cached = JSON.parse(readFileSync(join(dir, "pool-cache.json"), "utf8"));
+	assert.equal(cached.pool.generated, "2026-10-05", "the successful download survives the late failure");
+	assert.equal(cached.retryAt, 0, "and no retry delay is set");
 	rmSync(dir, { recursive: true, force: true });
 });

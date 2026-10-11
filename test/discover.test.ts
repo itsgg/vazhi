@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { kilo, verdict, type Found } from "../scripts/discover.ts";
+import { kilo, piCatalog, verdict, type Found } from "../scripts/discover.ts";
 
 test("probe verdicts: rate limits are neutral, keyless auth or payment is a failure (review finding 11)", () => {
 	assert.equal(verdict(403, '{"error":"rate limit exceeded"}', false), "limited", "403 worded as a rate limit");
@@ -18,6 +18,28 @@ test("an empty catalog is an error, so the provider keeps its previous rows (rev
 	try {
 		const found: Found = { candidates: [], models: { kilo: [] } };
 		await assert.rejects(kilo(found), /empty or malformed/);
+	} finally {
+		globalThis.fetch = real;
+	}
+});
+
+test("built-in candidates include pi's live catalog from pi.dev, not just the pinned one", async () => {
+	const real = globalThis.fetch;
+	try {
+		globalThis.fetch = (async (url: string) => {
+			assert.match(String(url), /^https:\/\/pi\.dev\/api\/models\/providers\/nvidia\?types=chat$/);
+			return new Response(JSON.stringify([{ id: "new/model-added-today" }, { id: "old/bundled" }, { id: "img/x", type: "image" }]));
+		}) as typeof fetch;
+		assert.deepEqual((await piCatalog("nvidia", { "old/bundled": {} })).sort(), ["new/model-added-today", "old/bundled"]);
+		globalThis.fetch = (async () => new Response("down", { status: 503 })) as unknown as typeof fetch;
+		assert.deepEqual(await piCatalog("nvidia", { "old/bundled": {} }), ["old/bundled"], "pi.dev down: the bundled catalog");
+		assert.deepEqual(
+			(await piCatalog("nvidia", { "old/bundled": {} }, ["live/only-model"])).sort(),
+			["live/only-model", "old/bundled"],
+			"pi.dev down: last night's live-only models stay (review of the update change, 3)",
+		);
+		globalThis.fetch = (async () => new Response("[]")) as unknown as typeof fetch;
+		assert.ok((await piCatalog("nvidia", {}, ["live/only-model"])).includes("live/only-model"), "an empty answer counts as a failure");
 	} finally {
 		globalThis.fetch = real;
 	}

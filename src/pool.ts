@@ -3,8 +3,9 @@
  * providers. Three layers, later ones winning:
  *
  * 1. pool.json shipped in the package.
- * 2. The nightly pool.json from GitHub, cached in <agent dir>/vazhi/pool-cache.json and
- *    refreshed at most every 12 hours. It may only name models of free providers (providers.ts).
+ * 2. The nightly pool.json from GitHub, cached in <agent dir>/vazhi/pool-cache.json, checked at
+ *    the start of each session and each turn, and downloaded when the copy is 12 hours old (an
+ *    hour after a failed try). It may only name models free by each provider's rule (providers.ts).
  * 3. <agent dir>/vazhi/config.json, the user's: replace the pool, exclude or prefer models, or
  *    turn the download off. Nothing in it is restricted; it is the user's own choice.
  */
@@ -15,6 +16,8 @@ import { HOUR, type PoolEntry } from "./router.ts";
 
 export const REMOTE_URL = "https://raw.githubusercontent.com/itsgg/vazhi/main/pool.json";
 const REFRESH_EVERY = 12 * HOUR;
+/** After a failed download: one network blip should not hold back tonight's pool for 12 hours. */
+const RETRY_AFTER = HOUR;
 
 export interface ModelMeta {
 	id: string;
@@ -139,13 +142,21 @@ export function readConfig(dir: string): UserConfig {
 	return (lastConfig = config);
 }
 
-function readCache(dir: string): { fetchedAt: number; pool?: PoolFile } {
+interface Cache {
+	/** When the last download succeeded. */
+	fetchedAt: number;
+	/** Not before this time, after a failed download. */
+	retryAt: number;
+	pool?: PoolFile;
+}
+
+function readCache(dir: string): Cache {
 	try {
 		const raw = readJson(join(dir, "pool-cache.json"));
-		const fetchedAt = typeof raw?.fetchedAt === "number" ? raw.fetchedAt : 0;
-		return { fetchedAt, pool: raw?.pool ? parsePool(raw.pool) : undefined };
+		const time = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+		return { fetchedAt: time(raw?.fetchedAt), retryAt: time(raw?.retryAt), pool: raw?.pool ? parsePool(raw.pool) : undefined };
 	} catch {
-		return { fetchedAt: 0 };
+		return { fetchedAt: 0, retryAt: 0 };
 	}
 }
 
@@ -168,25 +179,37 @@ export function loadPool(dir: string, bundled: PoolFile): { pool: PoolFile; sour
 	return { pool: { ...base, pool: entries }, source };
 }
 
+/** Whether a download is due: the copy is 12 hours old and no failed try asked to wait. */
+export function refreshDue(dir: string, now = Date.now()): boolean {
+	if (readConfig(dir).autoUpdate === false) return false;
+	const cache = readCache(dir);
+	return now >= cache.retryAt && (cache.fetchedAt === 0 || now - cache.fetchedAt >= REFRESH_EVERY);
+}
+
 /**
- * Fetch the nightly pool if the cache is older than 12 hours, or always with force. Returns true
- * when a new pool was stored. Failures leave the cache alone and are retried after 12 hours.
+ * Download the nightly pool when due, or always with force. Returns true when a newer pool was
+ * stored. A failure keeps the last good pool and tries again an hour later.
  */
 export async function refreshRemote(dir: string, options: { force?: boolean; fetch?: typeof fetch; now?: number } = {}): Promise<boolean> {
 	const now = options.now ?? Date.now();
 	if (readConfig(dir).autoUpdate === false) return false;
+	if (!options.force && !refreshDue(dir, now)) return false;
 	const cache = readCache(dir);
-	if (!options.force && cache.fetchedAt > 0 && now - cache.fetchedAt < REFRESH_EVERY) return false;
 	mkdirSync(dir, { recursive: true });
-	const remember = (pool?: PoolFile) => writeAtomic(join(dir, "pool-cache.json"), { fetchedAt: now, pool: pool ?? cache.pool });
+	const file = join(dir, "pool-cache.json");
 	try {
 		const response = await (options.fetch ?? fetch)(REMOTE_URL, { signal: AbortSignal.timeout(10_000) });
 		if (!response.ok) throw new Error(`HTTP ${response.status}`);
 		const pool = parsePool(await response.json());
-		remember(pool);
+		// Another pi process may have stored a newer pool while this download ran.
+		if ((readCache(dir).pool?.generated ?? "") > pool.generated) return false;
+		writeAtomic(file, { fetchedAt: now, retryAt: 0, pool });
 		return pool.generated !== cache.pool?.generated;
 	} catch {
-		remember();
+		// Re-read: a download that succeeded meanwhile, here or in another process, wins.
+		const latest = readCache(dir);
+		if (latest.fetchedAt > cache.fetchedAt) return false;
+		writeAtomic(file, { fetchedAt: latest.fetchedAt, retryAt: now + RETRY_AFTER, pool: latest.pool });
 		return false;
 	}
 }
