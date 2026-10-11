@@ -243,7 +243,7 @@ export default function (pi: ExtensionAPI) {
 		if (isContextOverflow(message, physical?.contextWindow ?? 0)) return;
 
 		const text = message.errorMessage ?? "";
-		const rule = classify(text);
+		const rule = classify(text, message.provider);
 		if (rule.kind === "client") {
 			const next = clientReroute(clientReroutes, Date.now());
 			if (!next) return;

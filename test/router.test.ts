@@ -235,3 +235,18 @@ test("slow starters go behind faster models but still serve when nothing else is
 	assert.equal(s.slow["kilo/fast"], undefined, "exactly 15 s is not slower than 15 s");
 	assert.equal(s.slow["nvidia/slow"], undefined, "expired marks are pruned");
 });
+
+test("NVIDIA's 504 for a model it cannot serve cools like a hang: 15 minutes, then 30", () => {
+	const s = emptyState();
+	assert.equal(penalize(s, "nvidia/z-ai/glm-5.3", "504 status code (no body)", 0), 15 * MINUTE);
+	assert.equal(penalize(s, "nvidia/z-ai/glm-5.3", "504 status code (no body)", 0), 30 * MINUTE);
+});
+
+test("only NVIDIA's leading 504 counts as a hang (review findings)", () => {
+	assert.equal(classify("504 status code (no body)", "nvidia").kind, "slow");
+	assert.equal(classify("504 Gateway Timeout", "kilo").kind, "slow", "worded as a timeout, so a hang anyway");
+	assert.equal(classify("504 status code (no body)", "kilo").kind, "other", "another provider's bare 504 may be a blip");
+	assert.equal(classify("429 Too Many Requests. Retry-After: 504", "nvidia").kind, "rate", "a 504 later in the text is not the status");
+	assert.equal(classify("400 prompt has 504 tokens too many fields", "nvidia").kind, "client");
+	assert.equal(penalize(emptyState(), "kilo/x:free", "504 status code (no body)", 0), MINUTE);
+});

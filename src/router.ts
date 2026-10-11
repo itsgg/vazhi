@@ -206,7 +206,14 @@ export function parseRetryAfter(text: string): number | undefined {
 	return worded ? toMs(worded[1], worded[2]) : undefined;
 }
 
-export function classify(text: string): (typeof KINDS)[number] {
+/**
+ * The kind of a failure. A 504 status from NVIDIA is a hang reported early: with vazhi's short
+ * poll window NVIDIA answers 504 in about 7 s for a model it cannot serve, and a 1-minute cooldown
+ * had a dead GLM 5.3 retried every few minutes. Only the leading status counts, and only from
+ * NVIDIA; another provider's 504 may be a passing gateway blip.
+ */
+export function classify(text: string, provider?: string): (typeof KINDS)[number] {
+	if (provider === "nvidia" && /^\s*504\b/.test(text)) return KINDS.find((k) => k.kind === "slow")!;
 	return KINDS.find((k) => k.pattern.test(text))!;
 }
 
@@ -219,7 +226,7 @@ function extend(entries: Record<string, Cooldown>, key: string, now: number, unt
 /** Cool a model down after a failure; returns the cooldown in ms. */
 export function penalize(state: State, key: string, text: string, now: number, sharedLimits: string[] = []): number {
 	const { provider } = splitKey(key);
-	const rule = classify(text);
+	const rule = classify(text, provider);
 	const failures = num(state.models[key]?.failures) + 1;
 	// A delay the provider states beats our guess: Gemini says "exhausted" for per-minute limits too.
 	const stated = parseRetryAfter(text);
