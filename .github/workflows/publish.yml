@@ -1,6 +1,8 @@
 name: publish
-# Publishes to npm on a version tag through npm trusted publishing: GitHub's OIDC identity stands in
-# for a token, so none is stored. Configured on npmjs.com for itsgg/vazhi and this file's name.
+# Stages a release on npm for each version tag, through npm trusted publishing: GitHub's OIDC
+# identity stands in for a token, so none is stored. The trusted publisher on npmjs.com is
+# stage-only, so a release goes live only when a maintainer approves it with 2FA (npmjs.com,
+# Staged Packages, or `npm stage approve <id>`); a compromised job can stage but never publish.
 on:
   push:
     tags: ["v*"]
@@ -23,6 +25,6 @@ jobs:
       - run: npm test
       - name: Tag matches package.json
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
-      # Trusted publishing needs npm 11.5.1 or later.
-      - run: npm install -g --ignore-scripts npm@^11.5.1
-      - run: npm publish --access public
+      # Staged publishing needs npm 11.15.0 or later.
+      - run: npm install -g --ignore-scripts npm@^11.15.0
+      - run: npm stage publish
