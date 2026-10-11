@@ -371,7 +371,7 @@ test("a lock is taken over only when stale, and only its owner removes it (revie
 	rmSync(dir, { recursive: true, force: true });
 });
 
-test("a second waiter cannot delete or pass a live normal lock claim", { timeout: 10_000 }, async () => {
+test("a waiter honors a live claim", { timeout: 10_000 }, async () => {
 	const dir = mkdtempSync(join(tmpdir(), "vazhi-live-claim-"));
 	const stateFile = join(dir, "state.json");
 	const lock = `${stateFile}.lock`;
