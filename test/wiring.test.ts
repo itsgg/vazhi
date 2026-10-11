@@ -85,6 +85,32 @@ test("route: incompatible tool history skips Gemini 3 for the next model in pool
 	assert.equal(`${route.model.provider}/${route.model.id}`, "kilo/sig-fallback:free");
 });
 
+test("route: all incompatible candidates advise a new session or a non-Gemini-3 model", async () => {
+	const { virtual } = load({ pool: [{ model: "google/gemini-3.8-flash" }] });
+	const routeCtx = {
+		...ctx,
+		modelRegistry: {
+			find: (provider: string, id: string) => ({ provider, id }),
+			hasConfiguredAuth: () => true,
+		},
+	};
+	const messages = [
+		{
+			role: "assistant",
+			provider: "nvidia",
+			model: "z-ai/glm-5.3",
+			content: [{ type: "toolCall", id: "1", name: "foo", arguments: {} }],
+		},
+	];
+	await assert.rejects(
+		virtual.route({ reason: "user", thinkingLevel: "medium", messages }, routeCtx),
+		{
+			message:
+				"vazhi: no pool model matches Gemini thought-signature compatibility for this conversation; start a new session or add a non-Gemini-3 model to the pool",
+		},
+	);
+});
+
 test("route: signed Gemini conversation stays on that exact model", async () => {
 	const { virtual } = load({
 		pool: [

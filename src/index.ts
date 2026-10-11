@@ -58,7 +58,7 @@ function sanitizeQuotaWords(text: string): string {
 		.trim();
 }
 
-function valueToText(value: unknown): string {
+function valueToText(value: unknown): string | undefined {
 	if (typeof value === "string") return value;
 	return JSON.stringify(value);
 }
@@ -261,13 +261,13 @@ export default function (pi: ExtensionAPI) {
 				() => {
 					candidates = credentialed(ctx, turn.pool.pool);
 					if (candidates.length === 0) throw new Error("vazhi: no pool model has credentials; run /vazhi to see the pool");
-					let entries = eligibleForSignature(
+					const entries = eligibleForSignature(
 						candidates.map((c) => c.entry),
 						constraint,
 					);
 					if (entries.length === 0) {
 						throw new Error(
-							"vazhi: no pool model matches Gemini thought-signature compatibility for this conversation; adjust the pool or start a new turn",
+							"vazhi: no pool model matches Gemini thought-signature compatibility for this conversation; start a new session or add a non-Gemini-3 model to the pool",
 						);
 					}
 					return store.update((state) => {

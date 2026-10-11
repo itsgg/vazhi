@@ -290,9 +290,10 @@ export class Store {
 	}
 
 	/**
-	 * Node has no compare-and-unlink operation. This double token check retains the previous
-	 * ownership guard but has a narrow replacement race between the final read and unlink. It is
-	 * used only after a bounded claim wait or when hard links are unavailable, to preserve liveness.
+	 * Node has no compare-and-unlink operation. Token checks constrain the risk, but a timed-out
+	 * claimant cleaning up can briefly disrupt a newer claim, and replacement can race the final
+	 * read and unlink. This fallback is used only after a bounded wait or when hard links are
+	 * unavailable, preserving liveness.
 	 */
 	private deleteLockFallback(shouldDelete: DeleteCondition): void {
 		const tokenCheckedUnlink = (path: string, condition: DeleteCondition): void => {

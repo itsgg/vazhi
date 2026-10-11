@@ -32,6 +32,8 @@ test("structured provider error.message shapes are summarized without throwing",
 	assert.equal(summarizeError(JSON.stringify({ error: { message: 429 } }), key), `${key}: 429`);
 
 	assert.equal(summarizeError(JSON.stringify({ error: { message: null } }), key), `${key}: null`);
+	assert.equal(summarizeError(JSON.stringify({ error: { message: false } }), key), `${key}: false`);
+	assert.equal(summarizeError(JSON.stringify({ error: { message: 0 } }), key), `${key}: 0`);
 });
 
 test("empty error.message falls back to top-level message or raw body", () => {

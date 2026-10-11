@@ -31,9 +31,9 @@ Invalid entries are dropped independently so one damaged value does not discard 
 
 ## Lock recovery
 
-Keep exclusive `wx` lock-file creation and add a separate recovery guard. Every acquisition and release operation honors the guard. Stale-lock validation and deletion happen while the guard is held, and an acquiring process checks the guard again after creating its lock. This closes the check/delete race where a stale-lock waiter could delete a newly acquired lock.
+Keep exclusive `wx` lock-file creation. Lock deletion first hard-links the main lock to a fixed claim path, so only one cooperating process can inspect and remove that lock snapshot at a time. The claimant checks the claim's token or age and removes the main lock only while its token still matches the claimed snapshot.
 
-The lock owner token remains authoritative. Release removes the main lock only when its token still matches.
+A killed claimant can leave the claim path behind. Waiters therefore bound how long they honor a busy claim before cleaning it up and using a token-checked fallback; filesystems that do not support hard links use the same fallback immediately. Node has no compare-and-unlink operation, so this liveness fallback retains a narrow race: a timed-out claimant's cleanup may briefly disrupt a newer claim, and replacement may occur between the final token read and unlink. Repeated token checks constrain that risk. The lock owner token remains authoritative during normal release.
 
 ## Testing
 
@@ -42,6 +42,6 @@ Follow red-green cycles for:
 1. route-level blocking and pinning of Gemini 3 models;
 2. structured, numeric, and null provider error messages;
 3. malformed nested state values mixed with valid state;
-4. deterministic lock replacement during stale recovery.
+4. deterministic lock replacement during stale recovery and exclusion behind a live normal claim.
 
 Then run the complete test suite, TypeScript typecheck, production dependency audit, package dry-run, and repository cleanliness checks.

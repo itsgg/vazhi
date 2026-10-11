@@ -44,6 +44,14 @@ function childExitWithin(child: ReturnType<typeof spawn>, timeoutMs: number, lab
 	});
 }
 
+async function waitForPath(path: string, timeoutMs: number, label: string): Promise<void> {
+	const deadline = Date.now() + timeoutMs;
+	while (!existsSync(path)) {
+		if (Date.now() >= deadline) throw new Error(`${label} timed out after ${timeoutMs} ms`);
+		await new Promise((resolve) => setTimeout(resolve, 5));
+	}
+}
+
 test("parseRetryAfter reads the wordings providers use, with units", () => {
 	const cases: [string, number | undefined][] = [
 		['429: {"message":"Daily token quota exceeded. Retry after 88676 seconds.","retry_after":88676}', 88_676_000],
@@ -361,6 +369,100 @@ test("a lock is taken over only when stale, and only its owner removes it (revie
 	store.update(() => writeFileSync(lock, "someone-else"));
 	assert.equal(readFileSync(lock, "utf8"), "someone-else", "a lock it no longer owns is left alone");
 	rmSync(dir, { recursive: true, force: true });
+});
+
+test("a second waiter cannot delete or pass a live normal lock claim", { timeout: 10_000 }, async () => {
+	const dir = mkdtempSync(join(tmpdir(), "vazhi-live-claim-"));
+	const stateFile = join(dir, "state.json");
+	const lock = `${stateFile}.lock`;
+	const claim = `${lock}.claim`;
+	const claimReady = join(dir, "claim-ready");
+	const releaseClaim = join(dir, "release-claim");
+	const secondObservedClaim = join(dir, "second-observed-claim");
+	const continueSecond = join(dir, "continue-second");
+	const secondEntered = join(dir, "second-entered");
+	const firstWorker = join(dir, "first.mts");
+	const secondWorker = join(dir, "second.mts");
+	const routerUrl = new URL("../src/router.ts", import.meta.url);
+	writeFileSync(
+		firstWorker,
+		`import fs from "node:fs";\n` +
+			`import { syncBuiltinESMExports } from "node:module";\n` +
+			`const originalRead = fs.readFileSync;\n` +
+			`let held = false;\n` +
+			`fs.readFileSync = function (...args) {\n` +
+			`  if (!held && String(args[0]) === ${JSON.stringify(claim)}) {\n` +
+			`    held = true;\n` +
+			`    fs.writeFileSync(${JSON.stringify(claimReady)}, "");\n` +
+			`    const deadline = Date.now() + 3_000;\n` +
+			`    while (!fs.existsSync(${JSON.stringify(releaseClaim)})) {\n` +
+			`      if (Date.now() >= deadline) throw new Error("claim release timed out");\n` +
+			`      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2);\n` +
+			`    }\n` +
+			`  }\n` +
+			`  return Reflect.apply(originalRead, fs, args);\n` +
+			`};\n` +
+			`syncBuiltinESMExports();\n` +
+			`const { Store } = await import(${JSON.stringify(routerUrl.href)} + "?live-claim-first");\n` +
+			`new Store(${JSON.stringify(dir)}).update((state) => { state.dispatched.first = [1]; });\n`,
+	);
+	writeFileSync(
+		secondWorker,
+		`import fs from "node:fs";\n` +
+			`import { syncBuiltinESMExports } from "node:module";\n` +
+			`const originalLink = fs.linkSync;\n` +
+			`let observed = false;\n` +
+			`fs.linkSync = function (...args) {\n` +
+			`  try {\n` +
+			`    return Reflect.apply(originalLink, fs, args);\n` +
+			`  } catch (error) {\n` +
+			`    if (!observed && error?.code === "EEXIST" && String(args[1]) === ${JSON.stringify(claim)}) {\n` +
+			`      observed = true;\n` +
+			`      fs.writeFileSync(${JSON.stringify(secondObservedClaim)}, "");\n` +
+			`      const deadline = Date.now() + 3_000;\n` +
+			`      while (!fs.existsSync(${JSON.stringify(continueSecond)})) {\n` +
+			`        if (Date.now() >= deadline) throw new Error("second waiter continuation timed out");\n` +
+			`        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2);\n` +
+			`      }\n` +
+			`    }\n` +
+			`    throw error;\n` +
+			`  }\n` +
+			`};\n` +
+			`syncBuiltinESMExports();\n` +
+			`const { Store } = await import(${JSON.stringify(routerUrl.href)} + "?live-claim-second");\n` +
+			`new Store(${JSON.stringify(dir)}).update((state) => {\n` +
+			`  fs.writeFileSync(${JSON.stringify(secondEntered)}, "");\n` +
+			`  state.dispatched.second = [2];\n` +
+			`});\n`,
+	);
+	const first = spawn(process.execPath, [firstWorker], { stdio: "inherit" });
+	const firstExit = childExitWithin(first, 5_000, "live claimant");
+	let second: ReturnType<typeof spawn> | undefined;
+	try {
+		await waitForPath(claimReady, 2_000, "live claim");
+		assert.equal(existsSync(claim), true, "the first process holds a normal hard-link claim");
+		const firstToken = readFileSync(lock, "utf8");
+
+		second = spawn(process.execPath, [secondWorker], { stdio: "inherit" });
+		const secondExit = childExitWithin(second, 5_000, "second waiter");
+		await waitForPath(secondObservedClaim, 2_000, "second waiter claim observation");
+		assert.equal(readFileSync(lock, "utf8"), firstToken, "the waiter leaves the live owner's lock intact");
+		assert.equal(existsSync(secondEntered), false, "the waiter does not enter its update");
+
+		writeFileSync(releaseClaim, "");
+		assert.equal(await firstExit, 0);
+		writeFileSync(continueSecond, "");
+		assert.equal(await secondExit, 0);
+		const state = new Store(dir).load();
+		assert.deepEqual(state.dispatched.first, [1]);
+		assert.deepEqual(state.dispatched.second, [2]);
+	} finally {
+		writeFileSync(releaseClaim, "");
+		writeFileSync(continueSecond, "");
+		first.kill("SIGKILL");
+		second?.kill("SIGKILL");
+		rmSync(dir, { recursive: true, force: true });
+	}
 });
 
 async function assertOrphanedClaimRecovered(lockExists: boolean): Promise<void> {
