@@ -22,6 +22,7 @@ import {
 	emptyState,
 	formatDuration,
 	keyOf,
+	noteStart,
 	penalize,
 	pickWithin,
 	readyAt,
@@ -55,10 +56,24 @@ export function retryable(message: AssistantMessage, key: string, kind: Kind, ms
 	return { ...message, errorMessage: `${key} failed (${kind}), cooling ${formatDuration(ms)}, details in /vazhi ${MARKER}` };
 }
 
-/** Drop the anonymous placeholder so keyless providers get no Authorization header; a real key stays. */
-export function stripAnonymous(headers: Record<string, string | null>): void {
+/**
+ * How long NVIDIA may hold a request it cannot serve. pi's catalog asks for 3600 s, so a model
+ * whose workers are down hangs until the client gives up (45 s with the README's settings); at
+ * 5 s NVIDIA answers 504 within about 7 s and vazhi reroutes. A model that is working is not cut
+ * off: measured 2026-10-11, a request that took 59 s to its first byte still came back 200.
+ */
+export const NVCF_POLL_SECONDS = "5";
+
+/**
+ * Adjust request headers: drop the anonymous placeholder so keyless providers get no
+ * Authorization header (a real key stays), and, when vazhi is routing, shorten NVIDIA's poll
+ * window. A model the user picked directly has no fallback, so it keeps pi's long wait.
+ */
+export function adjustHeaders(headers: Record<string, string | null>, routing: boolean): void {
 	for (const name of Object.keys(headers)) {
-		if (name.toLowerCase() === "authorization" && headers[name] === `Bearer ${ANONYMOUS_KEY}`) headers[name] = null;
+		const lower = name.toLowerCase();
+		if (lower === "authorization" && headers[name] === `Bearer ${ANONYMOUS_KEY}`) headers[name] = null;
+		if (routing && lower === "nvcf-poll-seconds" && headers[name] !== null) headers[name] = NVCF_POLL_SECONDS;
 	}
 }
 
@@ -172,7 +187,10 @@ export default function (pi: ExtensionAPI) {
 					});
 				},
 				MAX_WAIT,
-				(ms) => sleep(ms, request.signal),
+				(ms) => {
+					if (ctx.hasUI) ctx.ui.setWorkingMessage(`Working... (vazhi: every model is cooling, waiting ${formatDuration(ms)})`);
+					return sleep(ms, request.signal);
+				},
 			);
 			if (!choice.pick) {
 				throw new Error(
@@ -181,6 +199,8 @@ export default function (pi: ExtensionAPI) {
 				);
 			}
 			const model = candidates.find((c) => c.entry === choice.pick)!.model;
+			// The footer names the model only once it answers; say who is being asked meanwhile.
+			if (ctx.hasUI) ctx.ui.setWorkingMessage(`Working... (vazhi: ${model.id} on ${model.provider})`);
 			return { model, thinkingLevel: request.thinkingLevel };
 		},
 	});
@@ -190,17 +210,33 @@ export default function (pi: ExtensionAPI) {
 		void download();
 	});
 
+	// When each response's first delta arrived, keyed by its start time: time to first token.
+	const firstToken = new Map<number, number>();
+	const DELTAS = new Set(["text_delta", "thinking_delta", "toolcall_delta"]);
+	pi.on("message_update", (event) => {
+		const message = event.message;
+		// Start events carry no token; only a delta means the model has begun answering.
+		if (message.role !== "assistant" || !DELTAS.has(event.assistantMessageEvent?.type)) return;
+		if (!firstToken.has(message.timestamp)) firstToken.set(message.timestamp, Date.now());
+	});
+
 	let clientReroutes: number[] = [];
 	pi.on("message_end", (event, ctx) => {
 		const message = event.message;
-		if (message.role !== "assistant" || message.stopReason === "aborted") return;
+		if (message.role !== "assistant") return;
+		const firstAt = firstToken.get(message.timestamp);
+		firstToken.delete(message.timestamp);
+		if (message.stopReason === "aborted") return;
 		// With vazhi/auto selected, every physical response came from route(), even for a model a
 		// pool update has since removed, so no pool lookup here.
 		if (ctx.model?.provider !== PROVIDER || ctx.model?.id !== ID) return;
 		const key = `${message.provider}/${message.model}`;
 
 		if (message.stopReason !== "error") {
-			store.update((state) => recover(state, key, message.timestamp));
+			store.update((state) => {
+				recover(state, key, message.timestamp);
+				if (firstAt !== undefined) noteStart(state, key, firstAt - message.timestamp, Date.now());
+			});
 			return;
 		}
 		const physical = ctx.modelRegistry.find(message.provider, message.model);
@@ -219,7 +255,13 @@ export default function (pi: ExtensionAPI) {
 		return replacement ? { message: replacement } : undefined;
 	});
 
-	pi.on("before_provider_headers", (event) => stripAnonymous(event.headers));
+	pi.on("before_provider_headers", (event, ctx) =>
+		adjustHeaders(event.headers, ctx.model?.provider === PROVIDER && ctx.model?.id === ID),
+	);
+
+	pi.on("agent_end", (_event, ctx) => {
+		if (ctx.hasUI) ctx.ui.setWorkingMessage();
+	});
 
 	pi.registerCommand("vazhi", {
 		description: "Show the free model pool and cooldowns; /vazhi reset clears cooldowns, /vazhi update fetches the nightly pool",
@@ -249,7 +291,8 @@ export default function (pi: ExtensionAPI) {
 				else if (!ctx.modelRegistry.hasConfiguredAuth(model)) status = "no key";
 				else {
 					const at = readyAt(state, entry, now);
-					status = at <= now ? "ready" : `cooling ${formatDuration(at - now)} (${coolingReason(state, entry, now)})`;
+					const slow = (state.slow[entry.model] ?? 0) > now ? " (slow to start lately, tried after faster models)" : "";
+					status = at <= now ? `ready${slow}` : `cooling ${formatDuration(at - now)} (${coolingReason(state, entry, now)})`;
 				}
 				return `${String(i + 1).padStart(2)}. ${entry.model}  ${status}`;
 			});

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { isRetryableAssistantError } from "@earendil-works/pi-ai/compat";
-import { retryable, stripAnonymous } from "../src/index.ts";
+import { adjustHeaders, retryable } from "../src/index.ts";
 import { ANONYMOUS_KEY } from "../src/providers.ts";
 
 const base = {
@@ -30,10 +30,26 @@ test("a 404 is tagged and becomes retryable; a 503 is left to pi", () => {
 
 test("the anonymous placeholder is stripped, a real key is kept", () => {
 	const anon: Record<string, string | null> = { Authorization: `Bearer ${ANONYMOUS_KEY}`, "X-Other": "1" };
-	stripAnonymous(anon);
+	adjustHeaders(anon, false);
 	assert.equal(anon.Authorization, null);
 	assert.equal(anon["X-Other"], "1");
 	const real: Record<string, string | null> = { authorization: "Bearer sk-real" };
-	stripAnonymous(real);
+	adjustHeaders(real, true);
 	assert.equal(real.authorization, "Bearer sk-real");
+});
+
+test("NVIDIA's poll window is cut from 3600 s to 5 s, so a dead model answers 504 in seconds", () => {
+	const h: Record<string, string | null> = { "NVCF-POLL-SECONDS": "3600", Accept: "text/event-stream" };
+	adjustHeaders(h, true);
+	assert.equal(h["NVCF-POLL-SECONDS"], "5");
+	assert.equal(h.Accept, "text/event-stream");
+	const lower: Record<string, string | null> = { "nvcf-poll-seconds": "3600" };
+	adjustHeaders(lower, true);
+	assert.equal(lower["nvcf-poll-seconds"], "5");
+	const none: Record<string, string | null> = { Accept: "x" };
+	adjustHeaders(none, true);
+	assert.deepEqual(none, { Accept: "x" }, "requests without the header are untouched");
+	const direct: Record<string, string | null> = { "NVCF-POLL-SECONDS": "3600" };
+	adjustHeaders(direct, false);
+	assert.equal(direct["NVCF-POLL-SECONDS"], "3600", "a model picked directly has no fallback and keeps the long wait");
 });

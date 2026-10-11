@@ -16,6 +16,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { GOOGLE_MODELS } from "@earendil-works/pi-ai/providers/google.models";
 import { NVIDIA_MODELS } from "@earendil-works/pi-ai/providers/nvidia.models";
 import { OPENROUTER_MODELS } from "@earendil-works/pi-ai/providers/openrouter.models";
+import { NVCF_POLL_SECONDS } from "../src/index.ts";
 import { parsePool, type ModelMeta, type PoolFile } from "../src/pool.ts";
 import { allowedInRemotePool, OWN_PROVIDERS } from "../src/providers.ts";
 import { classify } from "../src/router.ts";
@@ -182,13 +183,18 @@ const TOOLS = [
 	},
 ];
 
-function endpoint(model: string): { url: string; headers: Record<string, string>; id: string } | undefined {
+export function endpoint(model: string): { url: string; headers: Record<string, string>; id: string } | undefined {
 	const slash = model.indexOf("/");
 	const provider = model.slice(0, slash);
 	const id = model.slice(slash + 1);
 	if (provider in OWN_PROVIDERS && OWN_PROVIDERS[provider].anonymous) return { url: OWN_PROVIDERS[provider].baseUrl, headers: {}, id };
 	if (provider === "nvidia" && process.env.NVIDIA_API_KEY)
-		return { url: "https://integrate.api.nvidia.com/v1", headers: { Authorization: `Bearer ${process.env.NVIDIA_API_KEY}` }, id };
+		return {
+			url: "https://integrate.api.nvidia.com/v1",
+			// As in src/index.ts: a model NVIDIA cannot serve answers 504 in seconds, not after the timeout.
+			headers: { Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`, "NVCF-POLL-SECONDS": NVCF_POLL_SECONDS },
+			id,
+		};
 	if (provider === "google" && process.env.GEMINI_API_KEY)
 		return {
 			url: "https://generativelanguage.googleapis.com/v1beta/openai",

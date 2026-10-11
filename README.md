@@ -43,6 +43,8 @@ The pool is an ordered list. For each request vazhi takes the first model that h
 
 When a model fails, it cools down for as long as the provider asks (`Retry-After`, "try again in 7m12s"), or by the kind of failure: 30 seconds and up for a rate limit, an hour for a daily quota or a removed model, 15 minutes for a hang, 6 hours for a rejected key. A repeat failure doubles the cooldown. A success clears it. Cooldowns live in one state file shared by every pi process, under a lock.
 
+Waiting is kept short three ways. NVIDIA's free tier queues a request it cannot serve for up to an hour, because pi asks it to; while vazhi routes, it asks for 5 seconds instead, so a dead NVIDIA model answers 504 in about 7 seconds and the request moves on (a working model is not cut off: one that took 59 seconds to its first token still answered). A model that takes more than 15 seconds to its first token goes behind faster models for 10 minutes, though it still serves when nothing faster is ready. And pi's "Working" line names the model being asked, so a wait is never a mystery.
+
 pi retries rate limits and server errors by itself, and on each retry vazhi picks another model. pi does not retry quota, 404 or bad-key errors, so vazhi marks those as retryable and pi moves on. When every model is cooling, vazhi waits up to 65 seconds for the first one back, then stops with a message naming it.
 
 `/vazhi` shows the pool with each model's state, `/vazhi reset` clears all cooldowns and `/vazhi update` fetches the nightly pool now.

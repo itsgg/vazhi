@@ -12,6 +12,7 @@ import {
 	emptyState,
 	HOUR,
 	MINUTE,
+	noteStart,
 	parseRetryAfter,
 	penalize,
 	pickWithin,
@@ -213,4 +214,24 @@ test("a lock is taken over only when stale, and only its owner removes it (revie
 	store.update(() => writeFileSync(lock, "someone-else"));
 	assert.equal(readFileSync(lock, "utf8"), "someone-else", "a lock it no longer owns is left alone");
 	rmSync(dir, { recursive: true, force: true });
+});
+
+test("slow starters go behind faster models but still serve when nothing else is ready", () => {
+	const a = { model: "nvidia/slow" };
+	const b = { model: "kilo/fast" };
+	const s = emptyState();
+	noteStart(s, "nvidia/slow", 32_000, 0);
+	assert.equal(choose([a, b], s, 1000).pick, b, "the faster model goes first");
+	assert.equal(choose([a, b], s, 1000, "nvidia/slow").pick, b, "even mid-turn, when a faster one is ready");
+	assert.equal(choose([a], s, 1000).pick, a, "a slow model beats no model");
+	s.models["kilo/fast"] = { until: 99_000, failures: 1, reason: "x", at: 0 };
+	assert.equal(choose([a, b], s, 1000).pick, a, "and serves when the fast one is cooling");
+	delete s.models["kilo/fast"];
+	noteStart(s, "nvidia/slow", 1_500, 2000);
+	assert.ok(s.slow["nvidia/slow"] > 2000, "a fast start does not clear the mark early (no flapping)");
+	assert.equal(choose([a, b], s, 2000).pick, b);
+	assert.equal(choose([a, b], s, 11 * MINUTE).pick, a, "the mark wears off at its deadline");
+	noteStart(s, "kilo/fast", 15_000, 11 * MINUTE);
+	assert.equal(s.slow["kilo/fast"], undefined, "exactly 15 s is not slower than 15 s");
+	assert.equal(s.slow["nvidia/slow"], undefined, "expired marks are pruned");
 });
