@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-11T11:05:54.116Z",
+  "generated": "2026-10-12T07:29:31.958Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -100,6 +100,16 @@
         ],
         "contextWindow": 131072,
         "maxTokens": 32768
+      },
+      {
+        "id": "gpt-oss-20b",
+        "name": "gpt-oss-20b (OVH)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 8192
       },
       {
         "id": "Qwen3.5-397B-A17B",
@@ -214,18 +224,8 @@
   },
   "pool": [
     {
-      "model": "nvidia/z-ai/glm-5.3",
-      "score": 74.8,
-      "status": "ok"
-    },
-    {
       "model": "nvidia/z-ai/glm-5.3-flash",
       "score": 71.5,
-      "status": "ok"
-    },
-    {
-      "model": "nvidia/deepseek-ai/deepseek-v4.1-flash",
-      "score": 68,
       "status": "ok"
     },
     {
@@ -271,6 +271,11 @@
       "status": "ok"
     },
     {
+      "model": "kilo/poolside/laguna-s-2.1:free",
+      "score": 42.8,
+      "status": "ok"
+    },
+    {
       "model": "llm7/DeepSeek-V4-Flash-0731",
       "score": 41.5,
       "status": "ok"
@@ -280,11 +285,6 @@
       "rpm": 2,
       "score": 41,
       "status": "ok"
-    },
-    {
-      "model": "kilo/poolside/laguna-s-2.1:free",
-      "score": 40.6,
-      "status": "unverified"
     },
     {
       "model": "google/gemini-3.5-flash-lite",
@@ -416,6 +416,17 @@
     {
       "model": "openrouter/nvidia/nemotron-3.5-lightning:free",
       "score": 17.8,
+      "status": "unverified"
+    },
+    {
+      "model": "ovh/gpt-oss-20b",
+      "rpm": 2,
+      "score": 17.6,
+      "status": "ok"
+    },
+    {
+      "model": "openrouter/openrouter/free",
+      "score": 17.3,
       "status": "unverified"
     }
   ],
