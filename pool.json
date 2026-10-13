@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-12T07:29:31.958Z",
+  "generated": "2026-10-13T07:50:44.751Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -224,13 +224,13 @@
   },
   "pool": [
     {
-      "model": "nvidia/z-ai/glm-5.3-flash",
-      "score": 71.5,
+      "model": "nvidia/moonshotai/kimi-k3",
+      "score": 76.2,
       "status": "ok"
     },
     {
-      "model": "google/gemini-3.8-flash",
-      "score": 61,
+      "model": "nvidia/z-ai/glm-5.3-flash",
+      "score": 71.5,
       "status": "ok"
     },
     {
