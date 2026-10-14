@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-13T07:50:44.751Z",
+  "generated": "2026-10-14T06:15:27.850Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -175,6 +175,16 @@
         ],
         "contextWindow": 400000,
         "maxTokens": 32768
+      },
+      {
+        "id": "minimax-m2.7",
+        "name": "minimax-m2.7 (LLM7)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 180000,
+        "maxTokens": 32768
       }
     ],
     "ollama-cloud": [
@@ -237,11 +247,6 @@
       "model": "ovh/Qwen3.8-27B",
       "rpm": 2,
       "score": 57.9,
-      "status": "ok"
-    },
-    {
-      "model": "google/gemini-3.6-flash",
-      "score": 55.4,
       "status": "ok"
     },
     {
@@ -330,6 +335,11 @@
       "model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free",
       "score": 32.8,
       "status": "unverified"
+    },
+    {
+      "model": "llm7/minimax-m2.7",
+      "score": 31.6,
+      "status": "ok"
     },
     {
       "model": "openrouter/poolside/laguna-s-2.1:free",
