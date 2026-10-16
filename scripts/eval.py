@@ -1,9 +1,7 @@
-"""Weekly: run three small agentic-coding tasks through pi and vazhi on the top pool models.
+"""Manual diagnostic for three small tasks, one pinned model at a time.
 
-Each model gets a fresh PI_CODING_AGENT_DIR whose vazhi config holds only that model, so the
-router's pacing and timeout handling apply exactly as in daily use. Keys come from the
-environment (NVIDIA_API_KEY, GEMINI_API_KEY); models CI cannot reach are skipped. Results merge
-into data/eval.json, which scripts/rank.ts reads. Usage: python3 -I scripts/eval.py [--top N]
+This does not measure vazhi's router and its results do not change rank. The public task bank
+is checked with: python3 -I scripts/eval.py --tasks-dir eval/public --check
 """
 import hashlib
 import json
@@ -245,6 +243,15 @@ def reachable(model: str) -> bool:
 
 
 def main():
+    if "--tasks-dir" in sys.argv:
+        sys.path.insert(0, str(HERE))
+        from eval_tasks import check_bank
+
+        root = Path(sys.argv[sys.argv.index("--tasks-dir") + 1])
+        if "--check" not in sys.argv:
+            raise SystemExit("live full-pool runs need a private task bank and are not the public smoke check")
+        print(check_bank(root))
+        return
     top = int(sys.argv[sys.argv.index("--top") + 1]) if "--top" in sys.argv else 10
     pool = json.loads((ROOT / "pool.json").read_text())["pool"]
     entries = [e for e in pool if e.get("status") == "ok" and reachable(e["model"])][:top]

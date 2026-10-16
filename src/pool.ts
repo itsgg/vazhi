@@ -51,6 +51,14 @@ export interface UserConfig {
 	prefer?: string[];
 	/** Fetch the nightly pool from GitHub. Default true. */
 	autoUpdate?: boolean;
+	/** Measured interventions. Everything here stays off unless set. */
+	experiments?: Experiments;
+}
+
+export interface Experiments {
+	observations?: boolean;
+	stickiness?: "current" | "strict";
+	cleanRetry?: boolean;
 }
 
 const ID = /^[A-Za-z0-9._:@/+-]{1,200}$/;
@@ -139,7 +147,19 @@ export function readConfig(dir: string): UserConfig {
 	if (Array.isArray(raw?.exclude)) config.exclude = raw.exclude.filter((x: unknown) => typeof x === "string");
 	if (Array.isArray(raw?.prefer)) config.prefer = raw.prefer.filter(isModelKey);
 	if (typeof raw?.autoUpdate === "boolean") config.autoUpdate = raw.autoUpdate;
+	const experiments = readExperiments(raw?.experiments);
+	if (experiments) config.experiments = experiments;
 	return (lastConfig = config);
+}
+
+function readExperiments(raw: unknown): Experiments | undefined {
+	if (!raw || typeof raw !== "object") return undefined;
+	const value = raw as Record<string, unknown>;
+	const experiments: Experiments = {};
+	if (typeof value.observations === "boolean") experiments.observations = value.observations;
+	if (value.stickiness === "current" || value.stickiness === "strict") experiments.stickiness = value.stickiness;
+	if (typeof value.cleanRetry === "boolean") experiments.cleanRetry = value.cleanRetry;
+	return Object.keys(experiments).length ? experiments : undefined;
 }
 
 interface Cache {

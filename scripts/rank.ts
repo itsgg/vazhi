@@ -1,11 +1,12 @@
 /**
  * Ranking for the nightly pool: pure functions, so the order is testable without a network.
  *
- * effective score = quality x capacity x eval
+ * effective score = quality x capacity
  * - quality: the Artificial Analysis coding index of the model's family when AA covers it,
  *   else the manual seed in data/seed-scores.json, else DEFAULT_SCORE.
  * - capacity: how much free use the provider gives (CAPACITY below), lower for unverified rows.
- * - eval: the weekly pi eval pass rate, when fresh, scales the score between 0.6 and 1.
+ * The old three-task eval multiplier is ignored. It pinned one model and treated a missing
+ * result as a perfect score. Full-pool results belong in the evaluation harness, not here.
  * Models that are down (scripts/rank.ts status) are left out; they are still probed every night
  * and come back once they answer.
  */
@@ -119,8 +120,6 @@ export function rank(
 		now: Date;
 	},
 ): Ranked[] {
-	const freshEval = (e?: EvalRecord) =>
-		e && e.total >= 3 && opts.now.getTime() - Date.parse(e.at) < 21 * 24 * 3600 * 1000 ? e : undefined;
 	const rows = candidates.map((c) => {
 		const provider = c.model.slice(0, c.model.indexOf("/"));
 		const fam = family(c.model);
@@ -128,9 +127,7 @@ export function rank(
 		// From history even when CI could not probe tonight: a missing key must not revive a dead model.
 		const st = status(opts.history[c.model]);
 		const capacity = (CAPACITY[provider] ?? 0.5) * (st === "unverified" ? 0.95 : 1);
-		const e = freshEval(opts.evals[c.model]);
-		const evalFactor = e ? 0.6 + 0.4 * (e.passed / e.total) : 1;
-		const row: Ranked = { model: c.model, score: Math.round(quality * capacity * evalFactor * 10) / 10, status: st };
+		const row: Ranked = { model: c.model, score: Math.round(quality * capacity * 10) / 10, status: st };
 		if (RPM[provider]) row.rpm = RPM[provider];
 		return row;
 	});

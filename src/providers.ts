@@ -60,8 +60,18 @@ export const OWN_PROVIDERS: Record<string, OwnProvider> = {
 const OLLAMA_FREE = ["nemotron-3-ultra", "gpt-oss:120b", "gemma4:31b"];
 /** Priced "Free" on Z.ai's international platform (docs.z.ai pricing, 2026-10-11). */
 const ZAI_FREE = ["glm-4.7-flash", "glm-4.5-flash"];
-/** Inside Workers AI's free 10K neurons; seven larger models are paid-only and left out. */
-const CLOUDFLARE_FREE = ["@cf/zai-org/glm-4.7-flash", "@cf/openai/gpt-oss-120b", "@cf/openai/gpt-oss-20b"];
+/**
+ * Inside Workers AI's free 10K neurons a day (pricing, 2026-10-16). Paid-only rows are left out:
+ * Kimi K2.6, Kimi K2.7 Code, GLM 5.2, GLM 5.3, GLM 5.3 Flash, DeepSeek V4 Flash and V4 Pro.
+ * Llama 3.3 70B's 24K window is below one pi turn.
+ */
+const CLOUDFLARE_FREE = [
+	"@cf/zai-org/glm-4.7-flash",
+	"@cf/openai/gpt-oss-120b",
+	"@cf/openai/gpt-oss-20b",
+	"@cf/google/gemma-4-26b-a4b-it",
+	"@cf/qwen/qwen3.8-27b",
+];
 
 /**
  * Which models the downloaded pool may use, per provider. Each rule admits only models that are

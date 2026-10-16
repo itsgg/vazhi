@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { loadPool, parsePool, refreshRemote, REMOTE_URL, type PoolFile } from "../src/pool.ts";
+import { loadPool, parsePool, readConfig, refreshRemote, REMOTE_URL, type PoolFile } from "../src/pool.ts";
 
 const meta = { id: "m1:free", name: "M1", reasoning: true, input: ["text"], contextWindow: 128000, maxTokens: 32768 };
 
@@ -77,6 +77,13 @@ test("loadPool: newer nightly beats bundled; config can exclude, prefer and repl
 
 	writeFileSync(join(dir, "config.json"), '{"pool": [{"mod');
 	assert.equal(loadPool(dir, bundled).source, "config", "a half-saved config keeps the last good one");
+	rmSync(dir, { recursive: true, force: true });
+});
+
+test("experiment flags are opt-in and invalid values are dropped", () => {
+	const dir = mkdtempSync(join(tmpdir(), "vazhi-experiments-"));
+	writeFileSync(join(dir, "config.json"), JSON.stringify({ experiments: { observations: true, stickiness: "strict", cleanRetry: false, judge: true } }));
+	assert.deepEqual(readConfig(dir).experiments, { observations: true, stickiness: "strict", cleanRetry: false });
 	rmSync(dir, { recursive: true, force: true });
 });
 

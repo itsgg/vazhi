@@ -10,7 +10,13 @@
       { "id": "glm-4.7-flash", "name": "GLM 4.7 Flash (Z.ai free)", "reasoning": true, "input": ["text"], "contextWindow": 200000, "maxTokens": 65536 }
     ]
   },
-  "builtin": ["cloudflare-workers-ai/@cf/zai-org/glm-4.7-flash"],
+  "builtin": [
+    "cloudflare-workers-ai/@cf/google/gemma-4-26b-a4b-it",
+    "cloudflare-workers-ai/@cf/openai/gpt-oss-120b",
+    "cloudflare-workers-ai/@cf/openai/gpt-oss-20b",
+    "cloudflare-workers-ai/@cf/qwen/qwen3.8-27b",
+    "cloudflare-workers-ai/@cf/zai-org/glm-4.7-flash"
+  ],
   "ovh": {
     "default": { "reasoning": true, "input": ["text"], "contextWindow": 131072, "maxTokens": 16384 },
     "Qwen3.5-397B-A17B": { "reasoning": true, "input": ["text", "image"], "contextWindow": 262144, "maxTokens": 32768 },

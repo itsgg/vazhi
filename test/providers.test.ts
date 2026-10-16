@@ -14,6 +14,10 @@ test("the downloaded pool can only reach models free by each provider's terms (r
 		["ollama-cloud", "nemotron-3-ultra"],
 		["zai-free", "glm-4.7-flash"],
 		["cloudflare-workers-ai", "@cf/zai-org/glm-4.7-flash"],
+		["cloudflare-workers-ai", "@cf/openai/gpt-oss-120b"],
+		["cloudflare-workers-ai", "@cf/openai/gpt-oss-20b"],
+		["cloudflare-workers-ai", "@cf/google/gemma-4-26b-a4b-it"],
+		["cloudflare-workers-ai", "@cf/qwen/qwen3.8-27b"],
 	];
 	const refused: [string, string][] = [
 		["kilo", "anthropic/claude-opus-5"],
@@ -23,6 +27,9 @@ test("the downloaded pool can only reach models free by each provider's terms (r
 		["ollama-cloud", "kimi-k3"],
 		["zai-free", "glm-5.3-flash"],
 		["cloudflare-workers-ai", "@cf/moonshotai/kimi-k2.6"],
+		["cloudflare-workers-ai", "@cf/zai-org/glm-5.3"],
+		["cloudflare-workers-ai", "@cf/deepseek-ai/deepseek-v4-flash-0731"],
+		["cloudflare-workers-ai", "@cf/meta/llama-3.3-70b-instruct-fp8-fast"],
 		["anthropic", "claude-opus-5"],
 		["toString", "x"],
 		["__proto__", "x"],
