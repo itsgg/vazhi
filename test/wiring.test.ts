@@ -14,7 +14,16 @@ after(() => {
 	for (const d of dirs) rmSync(d, { recursive: true, force: true });
 });
 
-function load(options?: { pool?: { model: string }[]; experiments?: { observations?: boolean } }) {
+function load(options?: {
+	pool?: { model: string }[];
+	experiments?: {
+		observations?: boolean;
+		stickiness?: "current" | "strict";
+		cleanRetry?: boolean;
+		repoMap?: boolean;
+		taskClass?: { bugfix?: string; edit?: string; answer?: string };
+	};
+}) {
 	const dir = mkdtempSync(join(tmpdir(), "vazhi-wiring-"));
 	dirs.push(dir);
 	process.env.PI_CODING_AGENT_DIR = dir;
@@ -295,6 +304,69 @@ test("a repeated unsupported claim is stored without another continuation", () =
 	assert.equal(second?.continue, undefined);
 	assert.equal(second.entries[0].customType, "vazhi-unverified");
 	assert.match(notices.at(-1) ?? "", /unverified: test/);
+});
+
+test("strict stickiness keeps a slow model and a task-class table can move another model first", async () => {
+	const routeCtx = {
+		...ctx,
+		modelRegistry: {
+			find: (provider: string, id: string) => ({ provider, id }),
+			hasConfiguredAuth: () => true,
+		},
+	};
+	const sticky = load({ pool: [{ model: "nvidia/slow" }, { model: "kilo/fast" }], experiments: { stickiness: "strict" } });
+	writeFileSync(
+		join(process.env.PI_CODING_AGENT_DIR!, "vazhi", "state.json"),
+		JSON.stringify({ models: {}, providers: {}, lastLimit: {}, dispatched: {}, slow: { "nvidia/slow": Date.now() + 60_000 } }),
+	);
+	const stayed = await sticky.virtual.route(
+		{ reason: "continuation", thinkingLevel: "medium", messages: [], previous: { model: { provider: "nvidia", id: "slow" } } },
+		routeCtx,
+	);
+	assert.equal(stayed.model.id, "slow");
+	const switched = load({ pool: [{ model: "nvidia/slow" }, { model: "kilo/fast" }] });
+	writeFileSync(
+		join(process.env.PI_CODING_AGENT_DIR!, "vazhi", "state.json"),
+		JSON.stringify({ models: {}, providers: {}, lastLimit: {}, dispatched: {}, slow: { "nvidia/slow": Date.now() + 60_000 } }),
+	);
+	const moved = await switched.virtual.route(
+		{ reason: "continuation", thinkingLevel: "medium", messages: [], previous: { model: { provider: "nvidia", id: "slow" } } },
+		routeCtx,
+	);
+	assert.equal(moved.model.id, "fast");
+	const classified = load({
+		pool: [{ model: "ovh/first" }, { model: "kilo/second" }],
+		experiments: { taskClass: { bugfix: "kilo/second" } },
+	});
+	const bugfix = await classified.virtual.route(
+		{ reason: "user", thinkingLevel: "medium", messages: [{ role: "user", content: "The tests fail. Fix them." }] },
+		routeCtx,
+	);
+	assert.equal(`${bugfix.model.provider}/${bugfix.model.id}`, "kilo/second");
+});
+
+test("clean retry records the failed check and does not continue", () => {
+	const { handlers } = load({ experiments: { cleanRetry: true } });
+	const event = {
+		type: "agent_before_settle",
+		outcome: "completed",
+		context: { contextMessages: [{ role: "assistant", content: [{ type: "text", text: "All tests pass." }] }] },
+	};
+	handlers.agent_start();
+	const first = handlers.agent_before_settle(event, { ...ctx, hasUI: false, cwd: "/tmp" });
+	assert.equal(first.continue, undefined);
+	assert.equal(first.entries[0].customType, "vazhi-clean-retry");
+	assert.match(first.entries[0].content, /new session/);
+});
+
+test("repository signatures are appended only when the experiment is on", () => {
+	const cwd = mkdtempSync(join(tmpdir(), "vazhi-map-wire-"));
+	dirs.push(cwd);
+	writeFileSync(join(cwd, "sample.py"), "def alpha():\n    return 1\n");
+	const event = { type: "before_agent_start", systemPrompt: "base", prompt: "hi" };
+	assert.equal(load().handlers.before_agent_start(event, { ...ctx, cwd }), undefined);
+	const on = load({ experiments: { repoMap: true } }).handlers.before_agent_start(event, { ...ctx, cwd });
+	assert.match(on.systemPrompt, /^base\n\nRepository signatures:\n[\s\S]*sample\.py: def alpha/);
 });
 
 test("observation windowing is off until the experiment is enabled", () => {

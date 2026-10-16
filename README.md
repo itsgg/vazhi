@@ -82,7 +82,13 @@ Installed copies check for a new list at each session and turn, and download it 
 
 `exclude` drops models or whole providers. `prefer` moves models to the front. `pool` replaces the list with your own, as `{ "model": "provider/id" }` entries. `autoUpdate: false` stops the nightly download.
 
-`experiments.observations: true` collapses tool results older than the last five before they are sent to the model. The stored session is unchanged, and no second model writes the summary. It is off until a paired evaluation says to turn it on. `experiments.stickiness` and `experiments.cleanRetry` are reserved for those later trials and do not change routing yet.
+These switches live in `<agent dir>/vazhi/config.json` and stay off until you set them. A public smoke task does not show that any of them helps.
+
+- `experiments.observations: true` collapses tool results older than the last five before they are sent. The stored session is unchanged.
+- `experiments.stickiness: "strict"` keeps the model already working on a turn even when it starts slowly. The default still switches to a faster ready model.
+- `experiments.cleanRetry: true` stores the failed completion check and stops, instead of continuing in the same transcript.
+- `experiments.taskClass` may name one pool model for `bugfix`, `edit`, or `answer`. An empty table leaves pool order unchanged.
+- `experiments.repoMap: true` appends a capped list of source signatures to the system prompt at the start of a turn.
 
 ## Safety
 

@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+import eval as eval_cli
 import eval_tasks
 
 
@@ -50,6 +51,55 @@ class EvalTasksTest(unittest.TestCase):
 				"answered": True, "timed_out": False, "router": "a", "pool": "b", "bank": "c",
 				"seed": 1, "experiment": "judge",
 			})
+
+	def test_paired_run_scores_both_arms(self):
+		root = bank()
+		self.addCleanup(shutil.rmtree, root)
+		agent = (
+			f"{sys.executable} -c \"import os, pathlib; "
+			"assert not pathlib.Path('hidden').exists(); "
+			"word = pathlib.Path('note.txt').read_text().split()[0] if os.environ['VAZHI_EVAL_ARM']=='control' else 'no'; "
+			"pathlib.Path('answer.txt').write_text(word + chr(10)); "
+			"pathlib.Path('claim.txt').write_text('tests passed' + chr(10))\""
+		)
+		result = eval_tasks.run_paired(root, agent, "observations", 1, {"router": "r", "pool": "p", "bank": "b"})
+		by_arm = {row["arm"]: row for row in result["rows"]}
+		self.assertEqual(len(result["rows"]), 2)
+		self.assertTrue(by_arm["control"]["passed"])
+		self.assertFalse(by_arm["treatment"]["passed"])
+		self.assertTrue(by_arm["treatment"]["false_success"])
+		self.assertFalse(result["accept"])
+		slow = f"{sys.executable} -c \"import time; time.sleep(30)\""
+		row = eval_tasks.run_trial(
+			eval_tasks.discover(root)[0], root / "slow", slow, "control", None,
+			{"router": "r", "pool": "p", "bank": "b", "seed": 1}, timeout=0.2,
+		)
+		self.assertTrue(row["timed_out"])
+		self.assertFalse(row["answered"])
+		self.assertFalse(row["passed"])
+
+	def test_a_file_answer_with_no_stdout_counts(self):
+		root = bank()
+		self.addCleanup(shutil.rmtree, root)
+		agent = f"{sys.executable} -c \"import pathlib; pathlib.Path('answer.txt').write_text('alpha' + chr(10))\""
+		row = eval_tasks.run_trial(
+			eval_tasks.discover(root)[0], root / "quiet", agent, "control", None,
+			{"router": "r", "pool": "p", "bank": "b", "seed": 1},
+		)
+		self.assertTrue(row["answered"])
+		self.assertTrue(row["passed"])
+		self.assertFalse(row["false_success"])
+
+	def test_public_report_is_not_a_quality_result(self):
+		root = Path(__file__).resolve().parents[1] / "eval" / "public"
+		payload = eval_cli.report(root, {"rows": [{}, {}], "accept": True})
+		self.assertFalse(payload["quality"])
+		self.assertNotIn("accept", payload)
+		private = bank()
+		self.addCleanup(shutil.rmtree, private)
+		private_payload = eval_cli.report(private, {"rows": [{}, {}], "accept": False})
+		self.assertFalse(private_payload["accept"])
+		self.assertNotIn("quality", private_payload)
 
 	def test_public_bank_checks(self):
 		message = eval_tasks.check_bank(Path(__file__).resolve().parents[1] / "eval" / "public")

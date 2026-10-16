@@ -82,8 +82,8 @@ test("loadPool: newer nightly beats bundled; config can exclude, prefer and repl
 
 test("experiment flags are opt-in and invalid values are dropped", () => {
 	const dir = mkdtempSync(join(tmpdir(), "vazhi-experiments-"));
-	writeFileSync(join(dir, "config.json"), JSON.stringify({ experiments: { observations: true, stickiness: "strict", cleanRetry: false, judge: true } }));
-	assert.deepEqual(readConfig(dir).experiments, { observations: true, stickiness: "strict", cleanRetry: false });
+	writeFileSync(join(dir, "config.json"), JSON.stringify({ experiments: { observations: true, stickiness: "strict", cleanRetry: false, repoMap: true, taskClass: { bugfix: "kilo/a", edit: "not-a-model" }, judge: true } }));
+	assert.deepEqual(readConfig(dir).experiments, { observations: true, stickiness: "strict", cleanRetry: false, repoMap: true, taskClass: { bugfix: "kilo/a" } });
 	rmSync(dir, { recursive: true, force: true });
 });
 

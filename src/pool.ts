@@ -55,10 +55,18 @@ export interface UserConfig {
 	experiments?: Experiments;
 }
 
+export interface TaskClassModels {
+	bugfix?: string;
+	edit?: string;
+	answer?: string;
+}
+
 export interface Experiments {
 	observations?: boolean;
 	stickiness?: "current" | "strict";
 	cleanRetry?: boolean;
+	repoMap?: boolean;
+	taskClass?: TaskClassModels;
 }
 
 const ID = /^[A-Za-z0-9._:@/+-]{1,200}$/;
@@ -159,6 +167,15 @@ function readExperiments(raw: unknown): Experiments | undefined {
 	if (typeof value.observations === "boolean") experiments.observations = value.observations;
 	if (value.stickiness === "current" || value.stickiness === "strict") experiments.stickiness = value.stickiness;
 	if (typeof value.cleanRetry === "boolean") experiments.cleanRetry = value.cleanRetry;
+	if (typeof value.repoMap === "boolean") experiments.repoMap = value.repoMap;
+	if (value.taskClass && typeof value.taskClass === "object") {
+		const table: TaskClassModels = {};
+		for (const kind of ["bugfix", "edit", "answer"] as const) {
+			const model = (value.taskClass as Record<string, unknown>)[kind];
+			if (isModelKey(model)) table[kind] = model;
+		}
+		if (Object.keys(table).length) experiments.taskClass = table;
+	}
 	return Object.keys(experiments).length ? experiments : undefined;
 }
 

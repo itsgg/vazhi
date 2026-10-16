@@ -6,7 +6,9 @@ they are not a quality benchmark.
 """
 import hashlib
 import json
+import os
 import shutil
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -74,6 +76,58 @@ def result_row(fields: dict) -> dict:
 	if fields["timed_out"] or not fields["answered"]:
 		fields = {**fields, "passed": False}
 	return fields
+
+
+def run_trial(task: dict, dest: Path, agent: str, arm: str, experiment, meta: dict, timeout: float = 30) -> dict:
+	"""Run one supplied agent in a prepared workspace and score the hidden check.
+
+	A trial is answered when the agent finishes. The hidden check decides whether
+	that answer passed. false_success is set only when the agent writes claim.txt
+	containing "passed" and the hidden check fails. Wording in stdout is not a claim.
+	"""
+	prepare(task, dest)
+	env = os.environ.copy()
+	env["VAZHI_EVAL_ARM"] = arm
+	env["VAZHI_EVAL_EXPERIMENT"] = experiment or ""
+	env["VAZHI_EVAL_PROMPT"] = task["prompt"]
+	answered = True
+	timed_out = False
+	proc = subprocess.Popen(agent, cwd=dest, env=env, shell=True, start_new_session=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+	try:
+		proc.communicate(timeout=timeout)
+	except subprocess.TimeoutExpired:
+		os.killpg(proc.pid, signal.SIGKILL)
+		proc.communicate()
+		answered = False
+		timed_out = True
+	passed, _detail = score(task, dest)
+	claim = dest / "claim.txt"
+	false_success = (not passed) and claim.exists() and "passed" in claim.read_text(errors="replace").lower()
+	return result_row({
+		"arm": arm,
+		"task": task["id"],
+		"passed": passed,
+		"false_success": false_success,
+		"answered": answered,
+		"timed_out": timed_out,
+		"router": meta["router"],
+		"pool": meta["pool"],
+		"bank": meta["bank"],
+		"seed": meta["seed"],
+		"experiment": experiment,
+	})
+
+
+def run_paired(root: Path, agent: str, experiment, seed: int, meta: dict, timeout: float = 30) -> dict:
+	from eval_stats import accept, arm_order
+
+	tasks = {task["id"]: task for task in discover(root)}
+	rows = []
+	for index, (task_id, arm) in enumerate(arm_order(list(tasks), seed)):
+		rows.append(run_trial(tasks[task_id], root / ".runs" / f"{index}-{task_id}-{arm}", agent, arm, experiment, {**meta, "seed": seed}, timeout))
+	control = [row for row in rows if row["arm"] == "control"]
+	treatment = [row for row in rows if row["arm"] == "treatment"]
+	return {"rows": rows, "accept": accept(control, treatment)}
 
 
 def check_bank(root: Path) -> str:

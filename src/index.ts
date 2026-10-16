@@ -17,13 +17,14 @@ import { formatFailure, normalizeFailure } from "./errors.ts";
 import { modelAvailability } from "./models.ts";
 import { windowObservations } from "./observations.ts";
 import { loadPool, parsePool, readConfig, refreshDue, refreshRemote, type PoolFile } from "./pool.ts";
+import { repositoryMap } from "./repomap.ts";
+import { lastUserText, orderForClass, taskClass } from "./task.ts";
 import { ANONYMOUS_KEY, OWN_PROVIDERS } from "./providers.ts";
 import {
 	choose,
 	clientReroute,
 	emptyState,
 	formatDuration,
-	isGemini3,
 	keyOf,
 	noteStart,
 	penalize,
@@ -34,7 +35,6 @@ import {
 	signatureConstraint,
 	splitKey,
 	Store,
-	type SignatureConstraint,
 	type Kind,
 	type PoolEntry,
 } from "./router.ts";
@@ -131,16 +131,6 @@ function credentialed(ctx: ExtensionContext, pool: PoolEntry[]): { entry: PoolEn
 	});
 }
 
-function eligibleForSignature(entries: PoolEntry[], constraint: SignatureConstraint): PoolEntry[] {
-	return entries.filter((e) => {
-		const { provider, id } = splitKey(e.model);
-		if (provider !== "google" || !isGemini3(id)) return true;
-		if (constraint.mode === "unrestricted") return true;
-		if (constraint.mode === "blocked") return false;
-		return e.model === constraint.model;
-	});
-}
-
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
 	return new Promise((resolve, reject) => {
 		if (signal?.aborted) return reject(new Error("vazhi: aborted"));
@@ -215,18 +205,25 @@ export default function (pi: ExtensionAPI) {
 				() => {
 					candidates = credentialed(ctx, turn.pool.pool);
 					if (candidates.length === 0) throw new Error("vazhi: no pool model has credentials; run /vazhi to see the pool");
-					const entries = eligibleForSignature(
-						candidates.map((c) => c.entry),
-						constraint,
-					);
-					if (entries.length === 0) {
-						throw new Error(
-							"vazhi: no pool model matches Gemini thought-signature compatibility for this conversation; start a new session or add a non-Gemini-3 model to the pool",
-						);
-					}
+					const experiments = readConfig(dir).experiments;
 					return store.update((state) => {
 						const now = Date.now();
-						const c = choose(entries, state, now, previous, failed);
+						const entries = orderForClass(
+							candidates
+								.map((c) => c.entry)
+								.filter((entry) => {
+									const availability = modelAvailability(entry, state, now, ctx.modelRegistry, constraint);
+									return availability.kind === "ready" || availability.kind === "slow" || availability.kind === "cooling";
+								}),
+							taskClass(lastUserText(request.messages)),
+							experiments?.taskClass,
+						);
+						if (entries.length === 0) {
+							throw new Error(
+								"vazhi: no pool model matches Gemini thought-signature compatibility for this conversation; start a new session or add a non-Gemini-3 model to the pool",
+							);
+						}
+						const c = choose(entries, state, now, previous, failed, experiments?.stickiness ?? "current");
 						if (c.pick) reserve(state, c.pick, now);
 						return c;
 					});
@@ -293,6 +290,18 @@ export default function (pi: ExtensionAPI) {
 		});
 		if (decision.continue && decision.note) {
 			pushedDone = true;
+			if (readConfig(dir).experiments?.cleanRetry) {
+				return {
+					entries: [
+						{
+							type: "custom_message" as const,
+							customType: "vazhi-clean-retry",
+							content: `${decision.note}\n\nStart a new session and retry the original request. This transcript stays as it is.`,
+							display: true,
+						},
+					],
+				};
+			}
 			return {
 				continue: true,
 				entries: [{ type: "custom_message" as const, customType: "vazhi-done", content: decision.note, display: true }],
@@ -309,6 +318,12 @@ export default function (pi: ExtensionAPI) {
 				entries: [{ type: "custom_message" as const, customType: "vazhi-caveat", content: decision.caveat, display: true }],
 			};
 		}
+	});
+	pi.on("before_agent_start", (event, ctx) => {
+		if (!vazhiOn(ctx) || !readConfig(dir).experiments?.repoMap) return;
+		const map = repositoryMap(ctx.cwd);
+		if (!map) return;
+		return { systemPrompt: `${event.systemPrompt}\n\nRepository signatures:\n${map}` };
 	});
 	pi.on("context", (event, ctx) => {
 		if (!vazhiOn(ctx) || !readConfig(dir).experiments?.observations) return;
