@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-15T05:59:19.931Z",
+  "generated": "2026-10-16T05:58:01.026Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -35,16 +35,6 @@
           "text"
         ],
         "contextWindow": 262144,
-        "maxTokens": 65536
-      },
-      {
-        "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
-        "name": "NVIDIA: Nemotron 3 Ultra (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 1000000,
         "maxTokens": 65536
       },
       {
@@ -234,14 +224,24 @@
   },
   "pool": [
     {
-      "model": "nvidia/z-ai/glm-5.3-flash",
-      "score": 71.5,
+      "model": "nvidia/z-ai/glm-5.3",
+      "score": 74.8,
+      "status": "ok"
+    },
+    {
+      "model": "google/gemini-3.8-flash",
+      "score": 61,
       "status": "ok"
     },
     {
       "model": "ovh/Qwen3.8-27B",
       "rpm": 2,
       "score": 57.9,
+      "status": "ok"
+    },
+    {
+      "model": "google/gemini-3.6-flash",
+      "score": 55.4,
       "status": "ok"
     },
     {
@@ -253,11 +253,6 @@
       "model": "kilo/thinkingmachines/inkling-small:free",
       "score": 47.7,
       "status": "unverified"
-    },
-    {
-      "model": "kilo/nvidia/nemotron-3-ultra-550b-a55b:free",
-      "score": 46.8,
-      "status": "ok"
     },
     {
       "model": "ovh/Qwen3.6-27B",
@@ -433,11 +428,6 @@
       "model": "openrouter/openrouter/free",
       "score": 17.3,
       "status": "unverified"
-    },
-    {
-      "model": "nvidia/meta/muse-glimmer-30b",
-      "score": 17,
-      "status": "ok"
     }
   ],
   "attribution": "Coding scores from Artificial Analysis, https://artificialanalysis.ai/"
