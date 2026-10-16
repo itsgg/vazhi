@@ -629,6 +629,7 @@ test("slow starters go behind faster models but still serve when nothing else is
 	noteStart(s, "nvidia/slow", 32_000, 0);
 	assert.equal(choose([a, b], s, 1000).pick, b, "the faster model goes first");
 	assert.equal(choose([a, b], s, 1000, "nvidia/slow").pick, b, "even mid-turn, when a faster one is ready");
+	assert.equal(choose([a, b], s, 1000, "nvidia/slow", undefined, "strict").pick, a, "strict stickiness keeps the slow model");
 	assert.equal(choose([a], s, 1000).pick, a, "a slow model beats no model");
 	s.models["kilo/fast"] = { until: 99_000, failures: 1, reason: "x", at: 0 };
 	assert.equal(choose([a, b], s, 1000).pick, a, "and serves when the fast one is cooling");

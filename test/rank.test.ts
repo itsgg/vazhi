@@ -27,7 +27,7 @@ test("status: a pass is ok, one blip is forgiven, two failures or an unproven fa
 	assert.equal(status(h("fail", "fail", "ok")), "ok");
 });
 
-test("rank: quality times capacity, eval adjusts, down models last, ovh paced", () => {
+test("rank: quality times capacity, tiny evals do not adjust, down models last, ovh paced", () => {
 	const history: History = {
 		"nvidia/z-ai/glm-5.3": [{ at: "", result: "fail" }, { at: "", result: "fail" }],
 		"nvidia/z-ai/glm-5.3-flash": [{ at: "", result: "ok" }],
@@ -53,7 +53,7 @@ test("rank: quality times capacity, eval adjusts, down models last, ovh paced", 
 
 	const evals = { "nvidia/z-ai/glm-5.3-flash": { passed: 0, total: 3, at: "2026-10-10T00:00:00Z" } };
 	const withEval = rank(candidates, { history, aa: {}, seeds, evals, now });
-	assert.equal(withEval[0].model, "nvidia/nvidia/nemotron-3-ultra-550b-a55b", "a failed eval demotes");
+	assert.deepEqual(withEval, ranked, "three public tasks are too noisy to change model rank");
 
 	const aa = { "nemotron-3-ultra": 60 };
 	assert.equal(rank(candidates, { history, aa, seeds, evals: {}, now })[0].model, "nvidia/nvidia/nemotron-3-ultra-550b-a55b", "AA beats seeds");

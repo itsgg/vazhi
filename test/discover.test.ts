@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { endpoint, kilo, piCatalog, verdict, type Found } from "../scripts/discover.ts";
+import { readFileSync } from "node:fs";
+import { SHARED_LIMITS, endpoint, kilo, piCatalog, verdict, type Found } from "../scripts/discover.ts";
 
 test("probe verdicts: rate limits are neutral, keyless auth or payment is a failure (review finding 11)", () => {
 	assert.equal(verdict(403, '{"error":"rate limit exceeded"}', false), "limited", "403 worded as a rate limit");
@@ -43,6 +44,20 @@ test("built-in candidates include pi's live catalog from pi.dev, not just the pi
 	} finally {
 		globalThis.fetch = real;
 	}
+});
+
+test("Cloudflare candidates are the free chat models inside the daily neuron allowance", () => {
+	const builtin = (JSON.parse(readFileSync(new URL("../data/static.json", import.meta.url), "utf8")) as { builtin: string[] }).builtin;
+	for (const id of [
+		"@cf/zai-org/glm-4.7-flash",
+		"@cf/openai/gpt-oss-120b",
+		"@cf/openai/gpt-oss-20b",
+		"@cf/google/gemma-4-26b-a4b-it",
+		"@cf/qwen/qwen3.8-27b",
+	]) {
+		assert.ok(builtin.includes(`cloudflare-workers-ai/${id}`), id);
+	}
+	assert.ok(SHARED_LIMITS.includes("cloudflare-workers-ai"));
 });
 
 test("nightly probes of NVIDIA use the short poll window too, so dead models fail in seconds", () => {

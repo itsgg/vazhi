@@ -1,6 +1,6 @@
 {
   "name": "@itsgg/vazhi",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Free LLM auto-router for the pi coding agent: every request goes to the best free model that is up, from a model list rebuilt nightly.",
   "type": "module",
   "keywords": [

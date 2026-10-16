@@ -1,0 +1,4 @@
+{
+  "id": "first-word",
+  "prompt": "Read note.txt and write only its first word to answer.txt."
+}

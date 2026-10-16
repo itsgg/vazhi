@@ -16,6 +16,13 @@ test("the committed pool.json parses, keeps every row and names only allowed pro
 		const slash = model.indexOf("/");
 		assert.ok(allowedInRemotePool(model.slice(0, slash), model.slice(slash + 1)), model);
 	}
+	assert.ok(pool.sharedLimits.includes("cloudflare-workers-ai"), "one daily neuron budget covers every Cloudflare model");
+	const qwen = pool.pool.find((e) => e.model === "cloudflare-workers-ai/@cf/qwen/qwen3.8-27b");
+	const oss = pool.pool.find((e) => e.model === "cloudflare-workers-ai/@cf/openai/gpt-oss-120b");
+	assert.equal(qwen?.status, "unverified");
+	assert.equal(qwen?.score, 47.2);
+	assert.equal(oss?.status, "unverified");
+	assert.equal(oss?.score, 24.6);
 });
 
 test("committed model lists are sorted, so catalog reordering does not churn pool.json (review finding 17)", () => {

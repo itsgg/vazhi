@@ -1,9 +1,11 @@
-"""Weekly: run three small agentic-coding tasks through pi and vazhi on the top pool models.
+"""Manual diagnostic for three small tasks, one pinned model at a time.
 
-Each model gets a fresh PI_CODING_AGENT_DIR whose vazhi config holds only that model, so the
-router's pacing and timeout handling apply exactly as in daily use. Keys come from the
-environment (NVIDIA_API_KEY, GEMINI_API_KEY); models CI cannot reach are skipped. Results merge
-into data/eval.json, which scripts/rank.ts reads. Usage: python3 -I scripts/eval.py [--top N]
+This does not measure vazhi's router and its results do not change rank. The public task bank
+is checked with: python3 -I scripts/eval.py --tasks-dir eval/public --check
+
+A paired run of a supplied agent is:
+python3 -I scripts/eval.py --tasks-dir <bank> --run --agent '<command>'
+The public bank only checks the harness. It is not a quality result.
 """
 import hashlib
 import json
@@ -244,7 +246,41 @@ def reachable(model: str) -> bool:
     return provider in ANONYMOUS or bool(os.environ.get(KEYS.get(provider, ""), ""))
 
 
+PUBLIC = ROOT / "eval" / "public"
+
+
+def report(root: Path, result: dict) -> dict:
+    """The shipped public bank can exercise the harness. It is not a quality gate."""
+    sys.path.insert(0, str(HERE))
+    from eval_tasks import bank_hash
+
+    payload = {"rows": len(result["rows"]), "bank": bank_hash(root)[:12]}
+    if root.resolve() == PUBLIC.resolve():
+        payload["quality"] = False
+    else:
+        payload["accept"] = result["accept"]
+    return payload
+
+
 def main():
+    if "--tasks-dir" in sys.argv:
+        sys.path.insert(0, str(HERE))
+        from eval_tasks import check_bank
+
+        root = Path(sys.argv[sys.argv.index("--tasks-dir") + 1])
+        if "--check" in sys.argv:
+            print(check_bank(root))
+            return
+        if "--run" not in sys.argv or "--agent" not in sys.argv:
+            raise SystemExit("pass --check, or --run --agent <command>; a public bank is not a quality result")
+        from eval_tasks import bank_hash, run_paired
+
+        agent = sys.argv[sys.argv.index("--agent") + 1]
+        experiment = sys.argv[sys.argv.index("--experiment") + 1] if "--experiment" in sys.argv else None
+        seed = int(sys.argv[sys.argv.index("--seed") + 1]) if "--seed" in sys.argv else 1
+        result = run_paired(root, agent, experiment, seed, {"router": "local", "pool": "local", "bank": bank_hash(root)})
+        print(json.dumps(report(root, result)))
+        return
     top = int(sys.argv[sys.argv.index("--top") + 1]) if "--top" in sys.argv else 10
     pool = json.loads((ROOT / "pool.json").read_text())["pool"]
     entries = [e for e in pool if e.get("status") == "ok" and reachable(e["model"])][:top]

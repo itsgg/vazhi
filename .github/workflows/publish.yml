@@ -27,4 +27,18 @@ jobs:
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
       # Staged publishing needs npm 11.15.0 or later.
       - run: npm install -g --ignore-scripts npm@^11.15.0
-      - run: npm stage publish
+      # Moving an existing version tag retries this job. npm refuses to stage a version it
+      # already has, and that refusal is the end state we want, not a failed release.
+      - name: Stage the release
+        run: |
+          set +e
+          out=$(npm stage publish 2>&1)
+          code=$?
+          set -e
+          printf '%s\n' "$out"
+          if [ "$code" -eq 0 ]; then exit 0; fi
+          if printf '%s\n' "$out" | grep -q "cannot publish over the previously published versions"; then
+            echo "Version is already published; nothing to stage."
+            exit 0
+          fi
+          exit "$code"

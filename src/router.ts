@@ -455,16 +455,24 @@ export type Choice = { pick: PoolEntry } | { pick?: undefined; next: PoolEntry; 
 /**
  * The model for one request, from entries that have credentials, in pool order. Models that
  * started slowly lately go behind the rest. Within a turn it stays on the model already working
- * on it, unless that model is slow and a faster one is ready; a retry avoids the model that just
+ * on it, unless that model is slow and a faster one is ready. stickiness "strict" keeps the
+ * working model even when it is slow. A retry avoids the model that just
  * failed, even if its cooldown was lost. With nothing ready it names the model that frees up first.
  */
-export function choose(entries: PoolEntry[], state: State, now: number, previous?: string, failed?: string): Choice {
+export function choose(
+	entries: PoolEntry[],
+	state: State,
+	now: number,
+	previous?: string,
+	failed?: string,
+	stickiness: "current" | "strict" = "current",
+): Choice {
 	const ready = entries.filter((e) => readyAt(state, e, now) <= now);
 	const unfailed = failed && ready.some((e) => e.model !== failed) ? ready.filter((e) => e.model !== failed) : ready;
 	const isSlow = (e: PoolEntry) => num(state.slow[e.model]) > now;
 	const usable = [...unfailed.filter((e) => !isSlow(e)), ...unfailed.filter(isSlow)];
 	const stay = usable.find((e) => e.model === previous);
-	const pick = stay && (!isSlow(stay) || isSlow(usable[0])) ? stay : usable[0];
+	const pick = stay && (stickiness === "strict" || !isSlow(stay) || isSlow(usable[0])) ? stay : usable[0];
 	if (pick) return { pick };
 	const next = entries.reduce((a, b) => (readyAt(state, b, now) < readyAt(state, a, now) ? b : a));
 	return { next, waitMs: readyAt(state, next, now) - now };

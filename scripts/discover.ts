@@ -30,6 +30,8 @@ const seeds = (read("data/seed-scores.json") as { scores: Record<string, number>
 const HISTORY = "data/history.json";
 const EVALS = "data/eval.json";
 const DRY = process.argv.includes("--dry-run");
+/** Providers whose quota is one account or IP budget, so a second limit cools every model. */
+export const SHARED_LIMITS = ["kilo", "llm7", "cloudflare-workers-ai"];
 const log = (...args: unknown[]) => console.error(...args);
 
 const excluded = (model: string) =>
@@ -349,7 +351,7 @@ async function main() {
 	const next = parsePool({
 		version: 1,
 		generated: at,
-		sharedLimits: ["kilo", "llm7"],
+		sharedLimits: SHARED_LIMITS,
 		models,
 		pool: ranked,
 	});

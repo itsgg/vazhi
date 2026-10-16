@@ -6,37 +6,39 @@
  * skips the model that failed. Quota, auth and 404 errors are not retryable for pi, so the
  * message_end handler tags them as unavailable, which makes pi retry and lets route() move on.
  */
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { accessSync, constants, readFileSync } from "node:fs";
+import { isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Api, AssistantMessage, Model } from "@earendil-works/pi-ai";
-import { isContextOverflow, isRetryableAssistantError } from "@earendil-works/pi-ai/compat";
+import { isContextOverflow } from "@earendil-works/pi-ai/compat";
 import { getAgentDir, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { loadPool, parsePool, refreshDue, refreshRemote, type PoolFile } from "./pool.ts";
+import { lastAssistantText, overwriteBlock, receiptFromTool, settleDone, type Receipt } from "./done.ts";
+import { formatFailure, normalizeFailure } from "./errors.ts";
+import { modelAvailability } from "./models.ts";
+import { windowObservations } from "./observations.ts";
+import { loadPool, parsePool, readConfig, refreshDue, refreshRemote, type PoolFile } from "./pool.ts";
+import { repositoryMap } from "./repomap.ts";
+import { lastUserText, orderForClass, taskClass } from "./task.ts";
 import { ANONYMOUS_KEY, OWN_PROVIDERS } from "./providers.ts";
 import {
 	choose,
-	classify,
 	clientReroute,
-	coolingReason,
 	emptyState,
 	formatDuration,
-	isGemini3,
 	keyOf,
 	noteStart,
 	penalize,
 	pickWithin,
-	readyAt,
 	recover,
 	reserve,
 	SECOND,
 	signatureConstraint,
 	splitKey,
 	Store,
-	type SignatureConstraint,
 	type Kind,
 	type PoolEntry,
 } from "./router.ts";
+import { renderHelp, renderStatus } from "./status.ts";
 
 const PROVIDER = "vazhi";
 const ID = "auto";
@@ -58,65 +60,17 @@ function sanitizeQuotaWords(text: string): string {
 		.trim();
 }
 
-function valueToText(value: unknown): string | undefined {
-	if (typeof value === "string") return value;
-	return JSON.stringify(value);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function extractMessageText(parsed: unknown): string | undefined {
-	if (!isRecord(parsed)) return undefined;
-
-	if (isRecord(parsed.error) && "message" in parsed.error) {
-		const inner = parsed.error.message;
-		if (inner === "") {
-			// fall through to top-level message or raw body
-		} else if (typeof inner === "string") {
-			try {
-				const innerParsed = JSON.parse(inner);
-				const nested = extractMessageText(innerParsed);
-				if (nested !== undefined) return nested;
-			} catch {}
-			return inner;
-		} else {
-			return valueToText(inner);
-		}
-	}
-
-	if ("message" in parsed) {
-		const top = parsed.message;
-		if (top === "") return undefined;
-		return valueToText(top);
-	}
-	return undefined;
-}
-
 /**
  * Normalize a raw provider error message into a clean one-liner for display.
  */
 export function summarizeError(raw: string, key: string): string {
-	const normalizedRaw = raw.replace(/\s+/g, " ").trim();
-	let text = normalizedRaw;
-	try {
-		const parsed = JSON.parse(normalizedRaw);
-		const extracted = extractMessageText(parsed);
-		if (extracted !== undefined) text = extracted;
-	} catch {}
-
-	text = sanitizeQuotaWords(text);
-
-	// If raw starts with an HTTP status code like "404", "503", "504", preserve it at the start
-	const statusMatch = raw.match(/^(\d{3})\b/);
-	if (statusMatch) {
-		const status = statusMatch[1];
-		const rest = text.startsWith(status) ? text.slice(status.length).trim() : text;
-		return `${status} (${key}): ${rest.slice(0, 80)}`.replace(/:\s*$/, "");
+	const failure = normalizeFailure(raw, key.split("/", 1)[0]);
+	const leading = raw.match(/^\s*([1-5]\d\d)\b/);
+	if (leading) {
+		const text = sanitizeQuotaWords(formatFailure(failure));
+		return `${leading[1]} (${key}): ${text.replace(new RegExp(`^${leading[1]}\\s*`), "").slice(0, 80)}`;
 	}
-
-	return `${key}: ${text.slice(0, 80)}`;
+	return `${key}: ${sanitizeQuotaWords(failure.message).slice(0, 80)}`;
 }
 
 /**
@@ -174,16 +128,6 @@ function credentialed(ctx: ExtensionContext, pool: PoolEntry[]): { entry: PoolEn
 		const { provider, id } = splitKey(entry.model);
 		const model = ctx.modelRegistry.find(provider, id);
 		return model && ctx.modelRegistry.hasConfiguredAuth(model) ? [{ entry, model }] : [];
-	});
-}
-
-function eligibleForSignature(entries: PoolEntry[], constraint: SignatureConstraint): PoolEntry[] {
-	return entries.filter((e) => {
-		const { provider, id } = splitKey(e.model);
-		if (provider !== "google" || !isGemini3(id)) return true;
-		if (constraint.mode === "unrestricted") return true;
-		if (constraint.mode === "blocked") return false;
-		return e.model === constraint.model;
 	});
 }
 
@@ -261,18 +205,25 @@ export default function (pi: ExtensionAPI) {
 				() => {
 					candidates = credentialed(ctx, turn.pool.pool);
 					if (candidates.length === 0) throw new Error("vazhi: no pool model has credentials; run /vazhi to see the pool");
-					const entries = eligibleForSignature(
-						candidates.map((c) => c.entry),
-						constraint,
-					);
-					if (entries.length === 0) {
-						throw new Error(
-							"vazhi: no pool model matches Gemini thought-signature compatibility for this conversation; start a new session or add a non-Gemini-3 model to the pool",
-						);
-					}
+					const experiments = readConfig(dir).experiments;
 					return store.update((state) => {
 						const now = Date.now();
-						const c = choose(entries, state, now, previous, failed);
+						const entries = orderForClass(
+							candidates
+								.map((c) => c.entry)
+								.filter((entry) => {
+									const availability = modelAvailability(entry, state, now, ctx.modelRegistry, constraint);
+									return availability.kind === "ready" || availability.kind === "slow" || availability.kind === "cooling";
+								}),
+							taskClass(lastUserText(request.messages)),
+							experiments?.taskClass,
+						);
+						if (entries.length === 0) {
+							throw new Error(
+								"vazhi: no pool model matches Gemini thought-signature compatibility for this conversation; start a new session or add a non-Gemini-3 model to the pool",
+							);
+						}
+						const c = choose(entries, state, now, previous, failed, experiments?.stickiness ?? "current");
 						if (c.pick) reserve(state, c.pick, now);
 						return c;
 					});
@@ -299,6 +250,84 @@ export default function (pi: ExtensionAPI) {
 	pi.on("session_start", () => {
 		startTurn();
 		void download();
+	});
+
+	// Receipts belong to one agent run. A new prompt starts clean, so an earlier test cannot
+	// excuse a later "tests pass" after more edits.
+	let receipts: Receipt[] = [];
+	let pushedDone = false;
+	pi.on("agent_start", () => {
+		receipts = [];
+		pushedDone = false;
+	});
+	const vazhiOn = (ctx: { model?: { provider?: string; id?: string } }) =>
+		ctx.model?.provider === PROVIDER && ctx.model?.id === ID;
+	pi.on("tool_call", (event, ctx) => {
+		if (!vazhiOn(ctx)) return;
+		const reason = overwriteBlock(event.toolName, event.input, receipts, (path) => {
+			const absolute = isAbsolute(path) ? path : resolve(ctx.cwd, path);
+			try {
+				accessSync(absolute, constants.F_OK);
+				return true;
+			} catch {
+				return false;
+			}
+		});
+		if (reason) return { block: true, reason };
+	});
+	pi.on("tool_result", (event, ctx) => {
+		if (!vazhiOn(ctx)) return;
+		const receipt = receiptFromTool(event.toolName, event.input, event.isError, event.structuredContent);
+		if (receipt) receipts.push(receipt);
+	});
+	pi.on("agent_before_settle", (event, ctx) => {
+		const decision = settleDone({
+			text: lastAssistantText(event.context.contextMessages),
+			receipts,
+			alreadyPushed: pushedDone,
+			active: vazhiOn(ctx),
+			outcome: event.outcome,
+		});
+		if (decision.continue && decision.note) {
+			pushedDone = true;
+			if (readConfig(dir).experiments?.cleanRetry) {
+				return {
+					entries: [
+						{
+							type: "custom_message" as const,
+							customType: "vazhi-clean-retry",
+							content: `${decision.note}\n\nStart a new session and retry the original request. This transcript stays as it is.`,
+							display: true,
+						},
+					],
+				};
+			}
+			return {
+				continue: true,
+				entries: [{ type: "custom_message" as const, customType: "vazhi-done", content: decision.note, display: true }],
+			};
+		}
+		if (decision.unverified) {
+			if (ctx.hasUI) ctx.ui.notify(`vazhi: unverified: ${decision.unverified}`, "warning");
+			return {
+				entries: [{ type: "custom_message" as const, customType: "vazhi-unverified", content: `vazhi: unverified: ${decision.unverified}`, display: true }],
+			};
+		}
+		if (decision.caveat) {
+			return {
+				entries: [{ type: "custom_message" as const, customType: "vazhi-caveat", content: decision.caveat, display: true }],
+			};
+		}
+	});
+	pi.on("before_agent_start", (event, ctx) => {
+		if (!vazhiOn(ctx) || !readConfig(dir).experiments?.repoMap) return;
+		const map = repositoryMap(ctx.cwd);
+		if (!map) return;
+		return { systemPrompt: `${event.systemPrompt}\n\nRepository signatures:\n${map}` };
+	});
+	pi.on("context", (event, ctx) => {
+		if (!vazhiOn(ctx) || !readConfig(dir).experiments?.observations) return;
+		return { messages: windowObservations(event.messages) };
 	});
 
 	// When each response's first delta arrived, keyed by its start time: time to first token.
@@ -334,15 +363,15 @@ export default function (pi: ExtensionAPI) {
 		if (isContextOverflow(message, physical?.contextWindow ?? 0)) return;
 
 		const text = message.errorMessage ?? "";
-		const rule = classify(text, message.provider);
-		if (rule.kind === "client") {
+		const failure = normalizeFailure(text, message.provider);
+		if (failure.kind === "client") {
 			const next = clientReroute(clientReroutes, Date.now());
 			if (!next) return;
 			clientReroutes = next;
 		}
 		const ms = store.update((state) => penalize(state, key, text, Date.now(), turn.pool.sharedLimits));
 		if (ctx.hasUI) ctx.ui.notify(`vazhi: ${key} cooling for ${formatDuration(ms)}, rerouting`, "warning");
-		const replacement = retryable(message, key, rule.kind, ms);
+		const replacement = retryable(message, key, failure.kind, ms);
 		return replacement ? { message: replacement } : undefined;
 	});
 
@@ -355,9 +384,9 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("vazhi", {
-		description: "Show the free model pool and cooldowns; /vazhi reset clears cooldowns, /vazhi update fetches the nightly pool",
+		description: "Show free-model status; use /vazhi help for commands",
 		getArgumentCompletions: (prefix) =>
-			["reset", "update"].filter((a) => a.startsWith(prefix)).map((a) => ({ value: a, label: a })),
+			["status", "all", "help", "reset", "update"].filter((a) => a.startsWith(prefix)).map((a) => ({ value: a, label: a })),
 		handler: async (args, ctx) => {
 			const arg = args.trim();
 			if (arg === "reset") {
@@ -371,23 +400,31 @@ export default function (pi: ExtensionAPI) {
 				ctx.ui.notify(updated ? "vazhi: fetched a newer pool" : "vazhi: pool already current, or GitHub unreachable", "info");
 				return;
 			}
+			if (arg === "help") {
+				ctx.ui.notify(renderHelp(), "info");
+				return;
+			}
+			if (arg !== "" && arg !== "status" && arg !== "all") {
+				ctx.ui.notify(`Unknown vazhi command "${arg}".\n\n${renderHelp()}`, "warning");
+				return;
+			}
 			const now = Date.now();
 			const state = store.load();
 			const { pool, source } = current();
-			const lines = pool.pool.map((entry, i) => {
-				const { provider, id } = splitKey(entry.model);
-				const model = ctx.modelRegistry.find(provider, id);
-				let status: string;
-				if (!model) status = "not in catalog";
-				else if (!ctx.modelRegistry.hasConfiguredAuth(model)) status = "no key";
-				else {
-					const at = readyAt(state, entry, now);
-					const slow = (state.slow[entry.model] ?? 0) > now ? " (slow to start lately, tried after faster models)" : "";
-					status = at <= now ? `ready${slow}` : `cooling ${formatDuration(at - now)} (${coolingReason(state, entry, now)})`;
-				}
-				return `${String(i + 1).padStart(2)}. ${entry.model}  ${status}`;
-			});
-			ctx.ui.notify([`pool: ${source}, generated ${pool.generated || "unknown"}`, ...lines].join("\n"), "info");
+			ctx.ui.notify(
+				renderStatus({
+					source,
+					generated: pool.generated,
+					now,
+					all: arg === "all",
+					entries: pool.pool.map((entry, i) => ({
+						rank: i + 1,
+						model: entry.model,
+						availability: modelAvailability(entry, state, now, ctx.modelRegistry, { mode: "unrestricted" }),
+					})),
+				}),
+				"info",
+			);
 		},
 	});
 }

@@ -3,7 +3,8 @@
   "generated": "2026-10-16T05:58:01.026Z",
   "sharedLimits": [
     "kilo",
-    "llm7"
+    "llm7",
+    "cloudflare-workers-ai"
   ],
   "models": {
     "kilo": [
@@ -255,6 +256,11 @@
       "status": "unverified"
     },
     {
+      "model": "cloudflare-workers-ai/@cf/qwen/qwen3.8-27b",
+      "score": 47.2,
+      "status": "unverified"
+    },
+    {
       "model": "ovh/Qwen3.6-27B",
       "rpm": 2,
       "score": 45.6,
@@ -388,6 +394,11 @@
       "status": "ok"
     },
     {
+      "model": "cloudflare-workers-ai/@cf/openai/gpt-oss-120b",
+      "score": 24.6,
+      "status": "unverified"
+    },
+    {
       "model": "ovh/Qwen3.5-9B",
       "rpm": 2,
       "score": 24.4,
@@ -416,17 +427,6 @@
     {
       "model": "openrouter/nvidia/nemotron-3.5-lightning:free",
       "score": 17.8,
-      "status": "unverified"
-    },
-    {
-      "model": "ovh/gpt-oss-20b",
-      "rpm": 2,
-      "score": 17.6,
-      "status": "ok"
-    },
-    {
-      "model": "openrouter/openrouter/free",
-      "score": 17.3,
       "status": "unverified"
     }
   ],
