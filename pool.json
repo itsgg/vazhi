@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-16T05:58:01.026Z",
+  "generated": "2026-10-17T05:43:21.055Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -245,11 +245,6 @@
       "status": "ok"
     },
     {
-      "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-      "score": 49.3,
-      "status": "ok"
-    },
-    {
       "model": "kilo/thinkingmachines/inkling-small:free",
       "score": 47.7,
       "status": "unverified"
@@ -428,6 +423,11 @@
       "model": "openrouter/openrouter/free",
       "score": 17.3,
       "status": "unverified"
+    },
+    {
+      "model": "nvidia/meta/muse-glimmer-30b",
+      "score": 17,
+      "status": "ok"
     }
   ],
   "attribution": "Coding scores from Artificial Analysis, https://artificialanalysis.ai/"
