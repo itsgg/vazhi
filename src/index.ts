@@ -242,7 +242,12 @@ export default function (pi: ExtensionAPI) {
 			}
 			const model = candidates.find((c) => c.entry === choice.pick)!.model;
 			// The footer names the model only once it answers; say who is being asked meanwhile.
-			if (ctx.hasUI) ctx.ui.setWorkingMessage(`Working... (vazhi: ${model.id} on ${model.provider})`);
+			if (ctx.hasUI) {
+				if (request.reason === "retry" && request.failed) {
+					ctx.ui.notify(`vazhi: rerouted from ${request.failed.model.provider}/${request.failed.model.id} to ${model.provider}/${model.id}`, "info");
+				}
+				ctx.ui.setWorkingMessage(`Working... (vazhi: ${model.id} on ${model.provider})`);
+			}
 			return { model, thinkingLevel: request.thinkingLevel };
 		},
 	});
