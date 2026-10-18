@@ -1,0 +1,187 @@
+{
+  "generated": "2026-10-18T07:37:32Z",
+  "models": {
+    "google/gemini-3.6-flash": {
+      "at": "2026-10-18T07:37:32Z",
+      "passed": 1,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 10,
+          "secs": 88.1
+        },
+        "refactor": {
+          "detail": "out='TOTAL 108.00' sig='' leftover=True",
+          "pass": false,
+          "requests": 34,
+          "secs": 199.6
+        }
+      },
+      "total": 2
+    },
+    "google/gemini-3.8-flash": {
+      "at": "2026-10-18T07:37:32Z",
+      "passed": 1,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 12,
+          "secs": 95.0
+        },
+        "refactor": {
+          "detail": "out='' sig='KEYWORD_ONLY' leftover=True",
+          "pass": false,
+          "requests": 33,
+          "secs": 195.4
+        }
+      },
+      "total": 2
+    },
+    "kilo/nvidia/nemotron-3-ultra-550b-a55b:free": {
+      "at": "2026-10-18T07:37:32Z",
+      "passed": 3,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 6,
+          "secs": 26.7
+        },
+        "logs": {
+          "detail": "got='search' want='search'",
+          "pass": true,
+          "requests": 5,
+          "secs": 9.6
+        },
+        "refactor": {
+          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
+          "pass": true,
+          "requests": 9,
+          "secs": 17.2
+        }
+      },
+      "total": 3
+    },
+    "kilo/poolside/laguna-s-2.1:free": {
+      "at": "2026-10-18T07:37:32Z",
+      "passed": 3,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 5,
+          "secs": 110.4
+        },
+        "logs": {
+          "detail": "got='search' want='search'",
+          "pass": true,
+          "requests": 12,
+          "secs": 72.5
+        },
+        "refactor": {
+          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
+          "pass": true,
+          "requests": 5,
+          "secs": 48.3
+        }
+      },
+      "total": 3
+    },
+    "nvidia/nvidia/nemotron-3-ultra-550b-a55b": {
+      "at": "2026-10-18T07:37:32Z",
+      "passed": 2,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 8,
+          "secs": 17.2
+        },
+        "logs": {
+          "detail": "got='gateway' want='search'",
+          "pass": false,
+          "requests": 4,
+          "secs": 5.0
+        },
+        "refactor": {
+          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
+          "pass": true,
+          "requests": 9,
+          "secs": 21.0
+        }
+      },
+      "total": 3
+    },
+    "nvidia/z-ai/glm-5.3": {
+      "at": "2026-10-18T07:37:32Z",
+      "passed": 1,
+      "tasks": {
+        "logs": {
+          "detail": "got='search' want='search'",
+          "pass": true,
+          "requests": 6,
+          "secs": 37.2
+        },
+        "refactor": {
+          "detail": "out='TOTAL 108.00' sig='' leftover=True",
+          "pass": false,
+          "requests": 22,
+          "secs": 92.5
+        }
+      },
+      "total": 2
+    },
+    "ovh/Qwen3.6-27B": {
+      "at": "2026-10-18T07:37:32Z",
+      "passed": 2,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 5,
+          "secs": 126.1
+        },
+        "logs": {
+          "detail": "got='gateway' want='search'",
+          "pass": false,
+          "requests": 5,
+          "secs": 123.1
+        },
+        "refactor": {
+          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
+          "pass": true,
+          "requests": 6,
+          "secs": 127.1
+        }
+      },
+      "total": 3
+    },
+    "ovh/Qwen3.8-27B": {
+      "at": "2026-10-18T07:37:32Z",
+      "passed": 3,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 4,
+          "secs": 103.0
+        },
+        "logs": {
+          "detail": "got='search' want='search'",
+          "pass": true,
+          "requests": 7,
+          "secs": 202.5
+        },
+        "refactor": {
+          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
+          "pass": true,
+          "requests": 7,
+          "secs": 292.1
+        }
+      },
+      "total": 3
+    }
+  }
+}
