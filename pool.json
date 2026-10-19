@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-18T06:06:05.286Z",
+  "generated": "2026-10-19T06:20:18.272Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -255,11 +255,6 @@
       "status": "ok"
     },
     {
-      "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-      "score": 49.3,
-      "status": "ok"
-    },
-    {
       "model": "kilo/thinkingmachines/inkling-small:free",
       "score": 47.7,
       "status": "unverified"
@@ -267,12 +262,6 @@
     {
       "model": "kilo/nvidia/nemotron-3-ultra-550b-a55b:free",
       "score": 46.8,
-      "status": "ok"
-    },
-    {
-      "model": "ovh/Qwen3.6-27B",
-      "rpm": 2,
-      "score": 45.6,
       "status": "ok"
     },
     {
@@ -286,6 +275,11 @@
       "status": "ok"
     },
     {
+      "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "score": 42.7,
+      "status": "ok"
+    },
+    {
       "model": "llm7/DeepSeek-V4-Flash-0731",
       "score": 41.5,
       "status": "ok"
@@ -294,6 +288,12 @@
       "model": "ovh/Qwen3.5-397B-A17B",
       "rpm": 2,
       "score": 41,
+      "status": "ok"
+    },
+    {
+      "model": "ovh/Qwen3.6-27B",
+      "rpm": 2,
+      "score": 39.6,
       "status": "ok"
     },
     {
@@ -359,6 +359,11 @@
     {
       "model": "google/gemini-3.1-flash-lite",
       "score": 27.8,
+      "status": "ok"
+    },
+    {
+      "model": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "score": 26.8,
       "status": "ok"
     },
     {
@@ -433,11 +438,6 @@
       "rpm": 2,
       "score": 17.6,
       "status": "ok"
-    },
-    {
-      "model": "openrouter/openrouter/free",
-      "score": 17.3,
-      "status": "unverified"
     }
   ],
   "attribution": "Coding scores from Artificial Analysis, https://artificialanalysis.ai/"
