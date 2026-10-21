@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-19T06:20:18.272Z",
+  "generated": "2026-10-21T06:08:36.189Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -77,17 +77,6 @@
         ],
         "contextWindow": 262144,
         "maxTokens": 32768
-      },
-      {
-        "id": "thinkingmachines/inkling-small:free",
-        "name": "Thinking Machines: Inkling Small (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "contextWindow": 1048576,
-        "maxTokens": 65536
       }
     ],
     "ovh": [
@@ -239,11 +228,6 @@
       "status": "ok"
     },
     {
-      "model": "google/gemini-3.8-flash",
-      "score": 61,
-      "status": "ok"
-    },
-    {
       "model": "ovh/Qwen3.8-27B",
       "rpm": 2,
       "score": 57.9,
@@ -253,11 +237,6 @@
       "model": "google/gemini-3.6-flash",
       "score": 55.4,
       "status": "ok"
-    },
-    {
-      "model": "kilo/thinkingmachines/inkling-small:free",
-      "score": 47.7,
-      "status": "unverified"
     },
     {
       "model": "kilo/nvidia/nemotron-3-ultra-550b-a55b:free",
@@ -437,6 +416,16 @@
       "model": "ovh/gpt-oss-20b",
       "rpm": 2,
       "score": 17.6,
+      "status": "ok"
+    },
+    {
+      "model": "openrouter/openrouter/free",
+      "score": 17.3,
+      "status": "unverified"
+    },
+    {
+      "model": "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "score": 17,
       "status": "ok"
     }
   ],
