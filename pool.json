@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-22T06:11:28.491Z",
+  "generated": "2026-10-23T06:07:15.235Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -18,15 +18,14 @@
         "maxTokens": 64000
       },
       {
-        "id": "minimax/minimax-m3.1-flash:free",
-        "name": "MiniMax: MiniMax M3.1 Flash (free) (Kilo)",
+        "id": "kilo-auto/free",
+        "name": "Auto Free (Kilo)",
         "reasoning": true,
         "input": [
-          "text",
-          "image"
+          "text"
         ],
-        "contextWindow": 1000000,
-        "maxTokens": 65536
+        "contextWindow": 256000,
+        "maxTokens": 32768
       },
       {
         "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
@@ -89,16 +88,6 @@
         ],
         "contextWindow": 262144,
         "maxTokens": 32768
-      },
-      {
-        "id": "recursive/flint-v1.0:free",
-        "name": "Recursive: Flint (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 262144,
-        "maxTokens": 65536
       }
     ],
     "ovh": [
@@ -354,6 +343,11 @@
       "status": "unverified"
     },
     {
+      "model": "kilo/kilo-auto/free",
+      "score": 24.7,
+      "status": "ok"
+    },
+    {
       "model": "kilo/openrouter/free",
       "score": 24.7,
       "status": "ok"
@@ -401,6 +395,11 @@
       "status": "unverified"
     },
     {
+      "model": "nvidia/meta/muse-glimmer-30b",
+      "score": 17,
+      "status": "ok"
+    },
+    {
       "model": "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
       "score": 17,
       "status": "ok"
@@ -411,22 +410,12 @@
       "status": "ok"
     },
     {
-      "model": "kilo/minimax/minimax-m3.1-flash:free",
-      "score": 16.2,
-      "status": "ok"
-    },
-    {
       "model": "kilo/nvidia/nemotron-3.5-super-vl:free",
       "score": 16.2,
       "status": "ok"
     },
     {
       "model": "kilo/poolside/laguna-xs-2.1:free",
-      "score": 16.2,
-      "status": "ok"
-    },
-    {
-      "model": "kilo/recursive/flint-v1.0:free",
       "score": 16.2,
       "status": "ok"
     }
