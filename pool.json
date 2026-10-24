@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-23T06:07:15.235Z",
+  "generated": "2026-10-24T06:01:24.944Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -214,11 +214,6 @@
   },
   "pool": [
     {
-      "model": "nvidia/z-ai/glm-5.3",
-      "score": 74.8,
-      "status": "ok"
-    },
-    {
       "model": "ovh/Qwen3.8-27B",
       "rpm": 2,
       "score": 57.9,
@@ -396,6 +391,11 @@
     },
     {
       "model": "nvidia/meta/muse-glimmer-30b",
+      "score": 17,
+      "status": "ok"
+    },
+    {
+      "model": "nvidia/minimaxai/minimax-m3.1-flash",
       "score": 17,
       "status": "ok"
     },
