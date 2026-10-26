@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-24T06:01:24.944Z",
+  "generated": "2026-10-26T06:26:53.081Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -216,12 +216,12 @@
     {
       "model": "ovh/Qwen3.8-27B",
       "rpm": 2,
-      "score": 57.9,
+      "score": 50.2,
       "status": "ok"
     },
     {
-      "model": "google/gemini-3.6-flash",
-      "score": 55.4,
+      "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "score": 49.3,
       "status": "ok"
     },
     {
@@ -230,25 +230,20 @@
       "status": "ok"
     },
     {
-      "model": "kilo/poolside/laguna-s-2.1:free",
-      "score": 42.8,
+      "model": "ovh/Qwen3.6-27B",
+      "rpm": 2,
+      "score": 45.6,
       "status": "ok"
     },
     {
-      "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-      "score": 42.7,
+      "model": "kilo/poolside/laguna-s-2.1:free",
+      "score": 42.8,
       "status": "ok"
     },
     {
       "model": "ovh/Qwen3.5-397B-A17B",
       "rpm": 2,
       "score": 41,
-      "status": "ok"
-    },
-    {
-      "model": "ovh/Qwen3.6-27B",
-      "rpm": 2,
-      "score": 39.6,
       "status": "ok"
     },
     {
@@ -267,14 +262,14 @@
       "status": "unverified"
     },
     {
-      "model": "kilo/cohere/north-mini-code:free",
-      "score": 34.7,
-      "status": "ok"
-    },
-    {
       "model": "openrouter/thinkingmachines/inkling:free",
       "score": 34.6,
       "status": "unverified"
+    },
+    {
+      "model": "google/gemini-3.6-flash",
+      "score": 33.2,
+      "status": "ok"
     },
     {
       "model": "ollama-cloud/gemma4:31b",
@@ -289,6 +284,11 @@
     {
       "model": "llm7/minimax-m2.7",
       "score": 31.6,
+      "status": "ok"
+    },
+    {
+      "model": "kilo/cohere/north-mini-code:free",
+      "score": 30.1,
       "status": "ok"
     },
     {
