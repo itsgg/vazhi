@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-26T06:26:53.081Z",
+  "generated": "2026-10-28T06:56:36.434Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -88,6 +88,16 @@
         ],
         "contextWindow": 262144,
         "maxTokens": 32768
+      },
+      {
+        "id": "recursive/flint-v1.0:free",
+        "name": "Recursive: Flint (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 262144,
+        "maxTokens": 65536
       }
     ],
     "ovh": [
@@ -333,11 +343,6 @@
       "status": "ok"
     },
     {
-      "model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
-      "score": 25.1,
-      "status": "unverified"
-    },
-    {
       "model": "kilo/kilo-auto/free",
       "score": 24.7,
       "status": "ok"
@@ -416,6 +421,11 @@
     },
     {
       "model": "kilo/poolside/laguna-xs-2.1:free",
+      "score": 16.2,
+      "status": "ok"
+    },
+    {
+      "model": "kilo/recursive/flint-v1.0:free",
       "score": 16.2,
       "status": "ok"
     }
