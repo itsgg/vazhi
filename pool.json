@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-29T07:15:38.558Z",
+  "generated": "2026-10-30T07:17:50.999Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -195,18 +195,7 @@
         "maxTokens": 32768
       }
     ],
-    "llm7": [
-      {
-        "id": "gpt-oss:20b",
-        "name": "gpt-oss:20b (LLM7)",
-        "reasoning": false,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 128000,
-        "maxTokens": 32768
-      }
-    ],
+    "llm7": [],
     "ollama-cloud": [
       {
         "id": "gemma4:31b",
@@ -256,6 +245,11 @@
     {
       "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
       "score": 68,
+      "status": "ok"
+    },
+    {
+      "model": "google/gemini-3.8-flash",
+      "score": 65.6,
       "status": "ok"
     },
     {
@@ -453,11 +447,6 @@
     {
       "model": "google/gemini-3.1-flash-lite",
       "score": 13.6,
-      "status": "ok"
-    },
-    {
-      "model": "llm7/gpt-oss:20b",
-      "score": 12,
       "status": "ok"
     }
   ]
