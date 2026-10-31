@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-30T07:17:50.999Z",
+  "generated": "2026-10-31T07:07:21.683Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -98,16 +98,6 @@
         ],
         "contextWindow": 262144,
         "maxTokens": 32768
-      },
-      {
-        "id": "recursive/flint-v1.0:free",
-        "name": "Recursive: Flint (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 262144,
-        "maxTokens": 65536
       },
       {
         "id": "xingchen-agi/xing4.0-29b-a4b:free",
@@ -397,6 +387,11 @@
       "status": "ok"
     },
     {
+      "model": "nvidia/poolside/laguna-xs-2.1",
+      "score": 17,
+      "status": "ok"
+    },
+    {
       "model": "nvidia/stepfun-ai/step-5-preview",
       "score": 17,
       "status": "ok"
@@ -419,11 +414,6 @@
     },
     {
       "model": "kilo/poolside/laguna-xs-2.1:free",
-      "score": 16.2,
-      "status": "ok"
-    },
-    {
-      "model": "kilo/recursive/flint-v1.0:free",
       "score": 16.2,
       "status": "ok"
     },
