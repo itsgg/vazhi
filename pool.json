@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-10-31T07:07:21.683Z",
+  "generated": "2026-11-01T07:41:12.397Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -77,26 +77,6 @@
           "image"
         ],
         "contextWindow": 200000,
-        "maxTokens": 32768
-      },
-      {
-        "id": "poolside/laguna-s-2.1:free",
-        "name": "Poolside: Laguna S 2.1 (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 262144,
-        "maxTokens": 32768
-      },
-      {
-        "id": "poolside/laguna-xs-2.1:free",
-        "name": "Poolside: Laguna XS 2.1 (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 262144,
         "maxTokens": 32768
       },
       {
@@ -185,7 +165,18 @@
         "maxTokens": 32768
       }
     ],
-    "llm7": [],
+    "llm7": [
+      {
+        "id": "gpt-oss:20b",
+        "name": "gpt-oss:20b (LLM7)",
+        "reasoning": false,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 32768
+      }
+    ],
     "ollama-cloud": [
       {
         "id": "gemma4:31b",
@@ -238,11 +229,6 @@
       "status": "ok"
     },
     {
-      "model": "google/gemini-3.8-flash",
-      "score": 65.6,
-      "status": "ok"
-    },
-    {
       "model": "kilo/nvidia/nemotron-3-ultra-550b-a55b:free",
       "score": 64.6,
       "status": "ok"
@@ -276,20 +262,10 @@
       "status": "unverified"
     },
     {
-      "model": "kilo/poolside/laguna-s-2.1:free",
-      "score": 42.8,
-      "status": "ok"
-    },
-    {
       "model": "ovh/gpt-oss-120b",
       "rpm": 2,
       "score": 31.5,
       "status": "ok"
-    },
-    {
-      "model": "openrouter/poolside/laguna-s-2.1:free",
-      "score": 29.9,
-      "status": "unverified"
     },
     {
       "model": "google/gemini-3.5-flash-lite",
@@ -392,11 +368,6 @@
       "status": "ok"
     },
     {
-      "model": "nvidia/stepfun-ai/step-5-preview",
-      "score": 17,
-      "status": "ok"
-    },
-    {
       "model": "ovh/gpt-oss-20b",
       "rpm": 2,
       "score": 17,
@@ -409,11 +380,6 @@
     },
     {
       "model": "kilo/nvidia/nemotron-3.5-super-vl:free",
-      "score": 16.2,
-      "status": "ok"
-    },
-    {
-      "model": "kilo/poolside/laguna-xs-2.1:free",
       "score": 16.2,
       "status": "ok"
     },
@@ -438,6 +404,31 @@
       "model": "google/gemini-3.1-flash-lite",
       "score": 13.6,
       "status": "ok"
+    },
+    {
+      "model": "llm7/gpt-oss:20b",
+      "score": 12,
+      "status": "ok"
+    },
+    {
+      "model": "openrouter/dots-studio/dots-3-note-preview:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
+      "model": "openrouter/google/gemma-4-26b-a4b-it:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
+      "model": "openrouter/liquid/lfm-2.5-2.6b:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
+      "model": "openrouter/nvidia/nemotron-3.5-super-vl:free",
+      "score": 11.3,
+      "status": "unverified"
     }
   ]
 }
