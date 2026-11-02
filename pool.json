@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-01T07:41:12.397Z",
+  "generated": "2026-11-02T07:47:58.494Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -167,6 +167,26 @@
     ],
     "llm7": [
       {
+        "id": "DeepSeek-V4-Flash-0731",
+        "name": "DeepSeek-V4-Flash-0731 (LLM7)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 400000,
+        "maxTokens": 32768
+      },
+      {
+        "id": "GLM-5.3-Flash",
+        "name": "GLM-5.3-Flash (LLM7)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 400000,
+        "maxTokens": 32768
+      },
+      {
         "id": "gpt-oss:20b",
         "name": "gpt-oss:20b (LLM7)",
         "reasoning": false,
@@ -236,7 +256,7 @@
     {
       "model": "ovh/Qwen3.8-27B",
       "rpm": 2,
-      "score": 52.3,
+      "score": 60.4,
       "status": "ok"
     },
     {
@@ -251,9 +271,8 @@
       "status": "ok"
     },
     {
-      "model": "ovh/Qwen3.6-27B",
-      "rpm": 2,
-      "score": 45.9,
+      "model": "llm7/GLM-5.3-Flash",
+      "score": 46.8,
       "status": "ok"
     },
     {
@@ -262,9 +281,14 @@
       "status": "unverified"
     },
     {
-      "model": "ovh/gpt-oss-120b",
+      "model": "ovh/Qwen3.6-27B",
       "rpm": 2,
-      "score": 31.5,
+      "score": 39.8,
+      "status": "ok"
+    },
+    {
+      "model": "llm7/DeepSeek-V4-Flash-0731",
+      "score": 30.6,
       "status": "ok"
     },
     {
@@ -278,19 +302,15 @@
       "status": "unverified"
     },
     {
-      "model": "kilo/cohere/north-mini-code:free",
-      "score": 28,
+      "model": "ovh/gpt-oss-120b",
+      "rpm": 2,
+      "score": 27.3,
       "status": "ok"
     },
     {
       "model": "zai-free/glm-4.7-flash",
       "score": 26.5,
       "status": "unverified"
-    },
-    {
-      "model": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
-      "score": 26,
-      "status": "ok"
     },
     {
       "model": "ollama-cloud/gemma4:31b",
@@ -318,6 +338,11 @@
       "status": "ok"
     },
     {
+      "model": "kilo/cohere/north-mini-code:free",
+      "score": 23.7,
+      "status": "ok"
+    },
+    {
       "model": "openrouter/cohere/north-mini-code:free",
       "score": 22.6,
       "status": "unverified"
@@ -328,14 +353,14 @@
       "status": "unverified"
     },
     {
+      "model": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "score": 22.5,
+      "status": "ok"
+    },
+    {
       "model": "cloudflare-workers-ai/@cf/zai-org/glm-4.7-flash",
       "score": 20.6,
       "status": "unverified"
-    },
-    {
-      "model": "nvidia/openai/gpt-oss-20b",
-      "score": 20,
-      "status": "ok"
     },
     {
       "model": "openrouter/nvidia/nemotron-3.5-lightning:free",
@@ -422,11 +447,6 @@
     },
     {
       "model": "openrouter/liquid/lfm-2.5-2.6b:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/nvidia/nemotron-3.5-super-vl:free",
       "score": 11.3,
       "status": "unverified"
     }
