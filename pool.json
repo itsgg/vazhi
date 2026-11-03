@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-02T07:47:58.494Z",
+  "generated": "2026-11-03T08:01:41.858Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -16,6 +16,17 @@
         ],
         "contextWindow": 256000,
         "maxTokens": 64000
+      },
+      {
+        "id": "google/gemma-4-31b-it:free",
+        "name": "Google: Gemma 4 31B (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 262144,
+        "maxTokens": 32768
       },
       {
         "id": "kilo-auto/free",
@@ -78,6 +89,28 @@
         ],
         "contextWindow": 200000,
         "maxTokens": 32768
+      },
+      {
+        "id": "thinkingmachines/inkling-small:free",
+        "name": "Thinking Machines: Inkling Small (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 1048576,
+        "maxTokens": 65536
+      },
+      {
+        "id": "thinkingmachines/inkling:free",
+        "name": "Thinking Machines: Inkling (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 1048576,
+        "maxTokens": 65536
       },
       {
         "id": "xingchen-agi/xing4.0-29b-a4b:free",
@@ -177,16 +210,6 @@
         "maxTokens": 32768
       },
       {
-        "id": "GLM-5.3-Flash",
-        "name": "GLM-5.3-Flash (LLM7)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 400000,
-        "maxTokens": 32768
-      },
-      {
         "id": "gpt-oss:20b",
         "name": "gpt-oss:20b (LLM7)",
         "reasoning": false,
@@ -271,11 +294,6 @@
       "status": "ok"
     },
     {
-      "model": "llm7/GLM-5.3-Flash",
-      "score": 46.8,
-      "status": "ok"
-    },
-    {
       "model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free",
       "score": 45.2,
       "status": "unverified"
@@ -285,6 +303,11 @@
       "rpm": 2,
       "score": 39.8,
       "status": "ok"
+    },
+    {
+      "model": "kilo/google/gemma-4-31b-it:free",
+      "score": 30.7,
+      "status": "unverified"
     },
     {
       "model": "llm7/DeepSeek-V4-Flash-0731",
@@ -373,11 +396,6 @@
       "status": "unverified"
     },
     {
-      "model": "nvidia/meta/muse-glimmer-30b",
-      "score": 17,
-      "status": "ok"
-    },
-    {
       "model": "nvidia/minimaxai/minimax-m3.1-flash",
       "score": 17,
       "status": "ok"
@@ -414,6 +432,16 @@
       "status": "ok"
     },
     {
+      "model": "kilo/thinkingmachines/inkling-small:free",
+      "score": 15.3,
+      "status": "unverified"
+    },
+    {
+      "model": "kilo/thinkingmachines/inkling:free",
+      "score": 15.3,
+      "status": "unverified"
+    },
+    {
       "model": "ovh/Mistral-Small-3.2-24B-Instruct-2506",
       "rpm": 2,
       "score": 14.5,
@@ -442,11 +470,6 @@
     },
     {
       "model": "openrouter/google/gemma-4-26b-a4b-it:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/liquid/lfm-2.5-2.6b:free",
       "score": 11.3,
       "status": "unverified"
     }
