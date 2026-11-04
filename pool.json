@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-03T08:01:41.858Z",
+  "generated": "2026-11-04T07:37:08.041Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -18,17 +18,6 @@
         "maxTokens": 64000
       },
       {
-        "id": "google/gemma-4-31b-it:free",
-        "name": "Google: Gemma 4 31B (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "contextWindow": 262144,
-        "maxTokens": 32768
-      },
-      {
         "id": "kilo-auto/free",
         "name": "Auto Free (Kilo)",
         "reasoning": true,
@@ -37,16 +26,6 @@
         ],
         "contextWindow": 256000,
         "maxTokens": 32768
-      },
-      {
-        "id": "liquid/lfm-2.5-2.6b:free",
-        "name": "LiquidAI: LFM2.5-2.6B (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 65536,
-        "maxTokens": 8192
       },
       {
         "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
@@ -89,38 +68,6 @@
         ],
         "contextWindow": 200000,
         "maxTokens": 32768
-      },
-      {
-        "id": "thinkingmachines/inkling-small:free",
-        "name": "Thinking Machines: Inkling Small (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "contextWindow": 1048576,
-        "maxTokens": 65536
-      },
-      {
-        "id": "thinkingmachines/inkling:free",
-        "name": "Thinking Machines: Inkling (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "contextWindow": 1048576,
-        "maxTokens": 65536
-      },
-      {
-        "id": "xingchen-agi/xing4.0-29b-a4b:free",
-        "name": "XingChen: Xing4.0 29B A4B (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 262144,
-        "maxTokens": 65536
       }
     ],
     "ovh": [
@@ -199,16 +146,6 @@
       }
     ],
     "llm7": [
-      {
-        "id": "DeepSeek-V4-Flash-0731",
-        "name": "DeepSeek-V4-Flash-0731 (LLM7)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 400000,
-        "maxTokens": 32768
-      },
       {
         "id": "gpt-oss:20b",
         "name": "gpt-oss:20b (LLM7)",
@@ -305,16 +242,6 @@
       "status": "ok"
     },
     {
-      "model": "kilo/google/gemma-4-31b-it:free",
-      "score": 30.7,
-      "status": "unverified"
-    },
-    {
-      "model": "llm7/DeepSeek-V4-Flash-0731",
-      "score": 30.6,
-      "status": "ok"
-    },
-    {
       "model": "google/gemini-3.5-flash-lite",
       "score": 29.6,
       "status": "ok"
@@ -396,6 +323,11 @@
       "status": "unverified"
     },
     {
+      "model": "nvidia/meta/muse-glimmer-30b",
+      "score": 17,
+      "status": "ok"
+    },
+    {
       "model": "nvidia/minimaxai/minimax-m3.1-flash",
       "score": 17,
       "status": "ok"
@@ -411,35 +343,20 @@
       "status": "ok"
     },
     {
+      "model": "nvidia/stepfun-ai/step-5-preview",
+      "score": 17,
+      "status": "ok"
+    },
+    {
       "model": "ovh/gpt-oss-20b",
       "rpm": 2,
       "score": 17,
       "status": "ok"
     },
     {
-      "model": "kilo/liquid/lfm-2.5-2.6b:free",
-      "score": 16.2,
-      "status": "ok"
-    },
-    {
       "model": "kilo/nvidia/nemotron-3.5-super-vl:free",
       "score": 16.2,
       "status": "ok"
-    },
-    {
-      "model": "kilo/xingchen-agi/xing4.0-29b-a4b:free",
-      "score": 16.2,
-      "status": "ok"
-    },
-    {
-      "model": "kilo/thinkingmachines/inkling-small:free",
-      "score": 15.3,
-      "status": "unverified"
-    },
-    {
-      "model": "kilo/thinkingmachines/inkling:free",
-      "score": 15.3,
-      "status": "unverified"
     },
     {
       "model": "ovh/Mistral-Small-3.2-24B-Instruct-2506",
@@ -470,6 +387,26 @@
     },
     {
       "model": "openrouter/google/gemma-4-26b-a4b-it:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
+      "model": "openrouter/liquid/lfm-2.5-2.6b:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
+      "model": "openrouter/nvidia/nemotron-3.5-super-vl:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
+      "model": "openrouter/recursive/flint-v1.0:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
+      "model": "openrouter/thinkingmachines/inkling-small:free",
       "score": 11.3,
       "status": "unverified"
     }
