@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-04T07:37:08.041Z",
+  "generated": "2026-11-05T07:59:49.237Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -147,6 +147,16 @@
     ],
     "llm7": [
       {
+        "id": "DeepSeek-V4-Flash-0731",
+        "name": "DeepSeek-V4-Flash-0731 (LLM7)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 400000,
+        "maxTokens": 32768
+      },
+      {
         "id": "gpt-oss:20b",
         "name": "gpt-oss:20b (LLM7)",
         "reasoning": false,
@@ -239,6 +249,11 @@
       "model": "ovh/Qwen3.6-27B",
       "rpm": 2,
       "score": 39.8,
+      "status": "ok"
+    },
+    {
+      "model": "llm7/DeepSeek-V4-Flash-0731",
+      "score": 30.6,
       "status": "ok"
     },
     {
@@ -402,11 +417,6 @@
     },
     {
       "model": "openrouter/recursive/flint-v1.0:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/thinkingmachines/inkling-small:free",
       "score": 11.3,
       "status": "unverified"
     }
