@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-05T07:59:49.237Z",
+  "generated": "2026-11-07T07:21:11.677Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -26,6 +26,16 @@
         ],
         "contextWindow": 256000,
         "maxTokens": 32768
+      },
+      {
+        "id": "liquid/lfm-3-1.7b:free",
+        "name": "LiquidAI: LFM3-1.7B (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 262144,
+        "maxTokens": 8192
       },
       {
         "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
@@ -147,16 +157,6 @@
     ],
     "llm7": [
       {
-        "id": "DeepSeek-V4-Flash-0731",
-        "name": "DeepSeek-V4-Flash-0731 (LLM7)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 400000,
-        "maxTokens": 32768
-      },
-      {
         "id": "gpt-oss:20b",
         "name": "gpt-oss:20b (LLM7)",
         "reasoning": false,
@@ -249,11 +249,6 @@
       "model": "ovh/Qwen3.6-27B",
       "rpm": 2,
       "score": 39.8,
-      "status": "ok"
-    },
-    {
-      "model": "llm7/DeepSeek-V4-Flash-0731",
-      "score": 30.6,
       "status": "ok"
     },
     {
@@ -366,6 +361,11 @@
       "model": "ovh/gpt-oss-20b",
       "rpm": 2,
       "score": 17,
+      "status": "ok"
+    },
+    {
+      "model": "kilo/liquid/lfm-3-1.7b:free",
+      "score": 16.2,
       "status": "ok"
     },
     {
