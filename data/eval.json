@@ -1,27 +1,27 @@
 {
-  "generated": "2026-11-01T10:00:20Z",
+  "generated": "2026-11-08T09:45:59Z",
   "models": {
     "google/gemini-3.5-flash-lite": {
-      "at": "2026-11-01T10:00:20Z",
+      "at": "2026-11-08T09:45:59Z",
       "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
-          "requests": 9,
-          "secs": 32.7
+          "requests": 11,
+          "secs": 26.9
         },
         "logs": {
           "detail": "got='search' want='search'",
           "pass": true,
-          "requests": 5,
-          "secs": 4.9
+          "requests": 6,
+          "secs": 7.9
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
-          "requests": 26,
-          "secs": 93.7
+          "requests": 36,
+          "secs": 242.1
         }
       },
       "total": 3
@@ -96,51 +96,101 @@
       "total": 3
     },
     "kilo/kilo-auto/free": {
-      "at": "2026-11-01T10:00:20Z",
+      "at": "2026-11-08T09:45:59Z",
       "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
-          "requests": 5,
-          "secs": 32.4
+          "requests": 4,
+          "secs": 26.1
         },
         "logs": {
           "detail": "got='search' want='search'",
           "pass": true,
           "requests": 5,
-          "secs": 9.6
+          "secs": 16.4
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
-          "requests": 11,
-          "secs": 35.2
+          "requests": 5,
+          "secs": 30.1
         }
       },
       "total": 3
     },
     "kilo/nvidia/nemotron-3-ultra-550b-a55b:free": {
-      "at": "2026-11-01T10:00:20Z",
+      "at": "2026-11-08T09:45:59Z",
       "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
           "requests": 6,
-          "secs": 66.3
+          "secs": 41.0
         },
         "logs": {
           "detail": "got='search' want='search'",
           "pass": true,
-          "requests": 4,
-          "secs": 22.5
+          "requests": 5,
+          "secs": 14.2
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
           "requests": 9,
-          "secs": 72.7
+          "secs": 37.6
+        }
+      },
+      "total": 3
+    },
+    "kilo/nvidia/nemotron-3.5-lightning:free": {
+      "at": "2026-11-08T09:45:59Z",
+      "passed": 2,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 7,
+          "secs": 83.7
+        },
+        "logs": {
+          "detail": "got='' want='search'",
+          "pass": false,
+          "requests": 13,
+          "secs": 21.5
+        },
+        "refactor": {
+          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
+          "pass": true,
+          "requests": 9,
+          "secs": 23.6
+        }
+      },
+      "total": 3
+    },
+    "kilo/openrouter/free": {
+      "at": "2026-11-08T09:45:59Z",
+      "passed": 3,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 9,
+          "secs": 46.9
+        },
+        "logs": {
+          "detail": "got='search' want='search'",
+          "pass": true,
+          "requests": 3,
+          "secs": 4.4
+        },
+        "refactor": {
+          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
+          "pass": true,
+          "requests": 13,
+          "secs": 28.9
         }
       },
       "total": 3
@@ -171,26 +221,26 @@
       "total": 3
     },
     "nvidia/nvidia/nemotron-3-ultra-550b-a55b": {
-      "at": "2026-11-01T10:00:20Z",
+      "at": "2026-11-08T09:45:59Z",
       "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
-          "requests": 7,
-          "secs": 80.6
+          "requests": 6,
+          "secs": 36.0
         },
         "logs": {
           "detail": "got='search' want='search'",
           "pass": true,
-          "requests": 4,
-          "secs": 9.2
+          "requests": 10,
+          "secs": 25.5
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
-          "requests": 7,
-          "secs": 60.9
+          "requests": 9,
+          "secs": 20.6
         }
       },
       "total": 3
@@ -240,101 +290,101 @@
       "total": 2
     },
     "ovh/Qwen3.5-397B-A17B": {
-      "at": "2026-11-01T10:00:20Z",
+      "at": "2026-11-08T09:45:59Z",
       "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
           "requests": 5,
-          "secs": 152.5
+          "secs": 126.9
         },
         "logs": {
           "detail": "got='search' want='search'",
           "pass": true,
-          "requests": 4,
-          "secs": 92.3
+          "requests": 5,
+          "secs": 122.1
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
-          "requests": 25,
-          "secs": 324.0
+          "requests": 6,
+          "secs": 131.4
         }
       },
       "total": 3
     },
     "ovh/Qwen3.6-27B": {
-      "at": "2026-11-01T10:00:20Z",
-      "passed": 2,
-      "tasks": {
-        "bugfix": {
-          "detail": "OK",
-          "pass": true,
-          "requests": 5,
-          "secs": 127.2
-        },
-        "logs": {
-          "detail": "got='gateway' want='search'",
-          "pass": false,
-          "requests": 5,
-          "secs": 122.8
-        },
-        "refactor": {
-          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
-          "pass": true,
-          "requests": 5,
-          "secs": 124.2
-        }
-      },
-      "total": 3
-    },
-    "ovh/Qwen3.8-27B": {
-      "at": "2026-11-01T10:00:20Z",
+      "at": "2026-11-08T09:45:59Z",
       "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
-          "requests": 4,
-          "secs": 124.7
+          "requests": 5,
+          "secs": 127.9
         },
         "logs": {
           "detail": "got='search' want='search'",
           "pass": true,
           "requests": 5,
-          "secs": 139.0
+          "secs": 124.4
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
-          "requests": 5,
-          "secs": 125.9
+          "requests": 6,
+          "secs": 206.0
+        }
+      },
+      "total": 3
+    },
+    "ovh/Qwen3.8-27B": {
+      "at": "2026-11-08T09:45:59Z",
+      "passed": 3,
+      "tasks": {
+        "bugfix": {
+          "detail": "OK",
+          "pass": true,
+          "requests": 8,
+          "secs": 272.2
+        },
+        "logs": {
+          "detail": "got='search' want='search'",
+          "pass": true,
+          "requests": 7,
+          "secs": 192.3
+        },
+        "refactor": {
+          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
+          "pass": true,
+          "requests": 8,
+          "secs": 236.8
         }
       },
       "total": 3
     },
     "ovh/gpt-oss-120b": {
-      "at": "2026-11-01T10:00:20Z",
-      "passed": 2,
+      "at": "2026-11-08T09:45:59Z",
+      "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
-          "requests": 7,
-          "secs": 184.6
+          "requests": 6,
+          "secs": 132.4
         },
         "logs": {
-          "detail": "got='gateway' want='search'",
-          "pass": false,
-          "requests": 4,
-          "secs": 66.1
+          "detail": "got='search' want='search'",
+          "pass": true,
+          "requests": 5,
+          "secs": 121.9
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
           "requests": 14,
-          "secs": 420.1
+          "secs": 420.0
         }
       },
       "total": 3
