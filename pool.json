@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-07T07:21:11.677Z",
+  "generated": "2026-11-09T08:09:17.195Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -241,14 +241,20 @@
       "status": "ok"
     },
     {
+      "model": "ovh/Qwen3.6-27B",
+      "rpm": 2,
+      "score": 45.9,
+      "status": "ok"
+    },
+    {
       "model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free",
       "score": 45.2,
       "status": "unverified"
     },
     {
-      "model": "ovh/Qwen3.6-27B",
+      "model": "ovh/gpt-oss-120b",
       "rpm": 2,
-      "score": 39.8,
+      "score": 31.5,
       "status": "ok"
     },
     {
@@ -262,12 +268,6 @@
       "status": "unverified"
     },
     {
-      "model": "ovh/gpt-oss-120b",
-      "rpm": 2,
-      "score": 27.3,
-      "status": "ok"
-    },
-    {
       "model": "zai-free/glm-4.7-flash",
       "score": 26.5,
       "status": "unverified"
@@ -279,11 +279,6 @@
     },
     {
       "model": "kilo/kilo-auto/free",
-      "score": 24.7,
-      "status": "ok"
-    },
-    {
-      "model": "kilo/nvidia/nemotron-3.5-lightning:free",
       "score": 24.7,
       "status": "ok"
     },
@@ -318,6 +313,11 @@
       "status": "ok"
     },
     {
+      "model": "kilo/nvidia/nemotron-3.5-lightning:free",
+      "score": 21.4,
+      "status": "ok"
+    },
+    {
       "model": "cloudflare-workers-ai/@cf/zai-org/glm-4.7-flash",
       "score": 20.6,
       "status": "unverified"
@@ -349,11 +349,6 @@
     },
     {
       "model": "nvidia/poolside/laguna-xs-2.1",
-      "score": 17,
-      "status": "ok"
-    },
-    {
-      "model": "nvidia/stepfun-ai/step-5-preview",
       "score": 17,
       "status": "ok"
     },
@@ -417,6 +412,11 @@
     },
     {
       "model": "openrouter/recursive/flint-v1.0:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
+      "model": "openrouter/xingchen-agi/xing4.0-29b-a4b:free",
       "score": 11.3,
       "status": "unverified"
     }
