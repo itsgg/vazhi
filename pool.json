@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-09T08:09:17.195Z",
+  "generated": "2026-11-10T08:30:24.058Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -78,6 +78,17 @@
         ],
         "contextWindow": 200000,
         "maxTokens": 32768
+      },
+      {
+        "id": "thinkingmachines/inkling-2-small:free",
+        "name": "Thinking Machines: Inkling 2 Small (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 1048576,
+        "maxTokens": 65536
       }
     ],
     "ovh": [
@@ -369,6 +380,11 @@
       "status": "ok"
     },
     {
+      "model": "kilo/thinkingmachines/inkling-2-small:free",
+      "score": 15.3,
+      "status": "unverified"
+    },
+    {
       "model": "ovh/Mistral-Small-3.2-24B-Instruct-2506",
       "rpm": 2,
       "score": 14.5,
@@ -406,17 +422,12 @@
       "status": "unverified"
     },
     {
+      "model": "openrouter/liquid/lfm-3-1.7b:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
       "model": "openrouter/nvidia/nemotron-3.5-super-vl:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/recursive/flint-v1.0:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/xingchen-agi/xing4.0-29b-a4b:free",
       "score": 11.3,
       "status": "unverified"
     }
