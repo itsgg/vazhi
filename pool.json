@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-10T08:30:24.058Z",
+  "generated": "2026-11-12T08:27:34.682Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -166,18 +166,7 @@
         "maxTokens": 32768
       }
     ],
-    "llm7": [
-      {
-        "id": "gpt-oss:20b",
-        "name": "gpt-oss:20b (LLM7)",
-        "reasoning": false,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 128000,
-        "maxTokens": 32768
-      }
-    ],
+    "llm7": [],
     "ollama-cloud": [
       {
         "id": "gemma4:31b",
@@ -402,9 +391,9 @@
       "status": "ok"
     },
     {
-      "model": "llm7/gpt-oss:20b",
-      "score": 12,
-      "status": "ok"
+      "model": "openrouter/baidu/ernie-5.5-flash-preview:free",
+      "score": 11.3,
+      "status": "unverified"
     },
     {
       "model": "openrouter/dots-studio/dots-3-note-preview:free",
