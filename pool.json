@@ -1,12 +1,22 @@
 {
   "version": 1,
-  "generated": "2026-11-12T08:27:34.682Z",
+  "generated": "2026-11-13T08:11:25.489Z",
   "sharedLimits": [
     "kilo",
     "llm7"
   ],
   "models": {
     "kilo": [
+      {
+        "id": "apodex/apodex-1.1-mini:free",
+        "name": "Apodex: Apodex 1.1 Mini (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 262144,
+        "maxTokens": 65536
+      },
       {
         "id": "cohere/north-mini-code:free",
         "name": "Cohere: North Mini Code (free) (Kilo)",
@@ -80,8 +90,8 @@
         "maxTokens": 32768
       },
       {
-        "id": "thinkingmachines/inkling-2-small:free",
-        "name": "Thinking Machines: Inkling 2 Small (free) (Kilo)",
+        "id": "particle-ai/particle-1:free",
+        "name": "Particle AI: Particle-1 (free) (Kilo)",
         "reasoning": true,
         "input": [
           "text",
@@ -333,11 +343,6 @@
       "status": "unverified"
     },
     {
-      "model": "nvidia/meta/muse-glimmer-30b",
-      "score": 17,
-      "status": "ok"
-    },
-    {
       "model": "nvidia/minimaxai/minimax-m3.1-flash",
       "score": 17,
       "status": "ok"
@@ -353,9 +358,19 @@
       "status": "ok"
     },
     {
+      "model": "nvidia/stepfun-ai/step-5-preview",
+      "score": 17,
+      "status": "ok"
+    },
+    {
       "model": "ovh/gpt-oss-20b",
       "rpm": 2,
       "score": 17,
+      "status": "ok"
+    },
+    {
+      "model": "kilo/apodex/apodex-1.1-mini:free",
+      "score": 16.2,
       "status": "ok"
     },
     {
@@ -369,9 +384,9 @@
       "status": "ok"
     },
     {
-      "model": "kilo/thinkingmachines/inkling-2-small:free",
-      "score": 15.3,
-      "status": "unverified"
+      "model": "kilo/particle-ai/particle-1:free",
+      "score": 16.2,
+      "status": "ok"
     },
     {
       "model": "ovh/Mistral-Small-3.2-24B-Instruct-2506",
@@ -391,6 +406,11 @@
       "status": "ok"
     },
     {
+      "model": "openrouter/apodex/apodex-1.1-mini:free",
+      "score": 11.3,
+      "status": "unverified"
+    },
+    {
       "model": "openrouter/baidu/ernie-5.5-flash-preview:free",
       "score": 11.3,
       "status": "unverified"
@@ -407,16 +427,6 @@
     },
     {
       "model": "openrouter/liquid/lfm-2.5-2.6b:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/liquid/lfm-3-1.7b:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/nvidia/nemotron-3.5-super-vl:free",
       "score": 11.3,
       "status": "unverified"
     }
