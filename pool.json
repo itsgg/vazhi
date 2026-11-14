@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-13T08:11:25.489Z",
+  "generated": "2026-11-14T07:41:34.349Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -8,13 +8,13 @@
   "models": {
     "kilo": [
       {
-        "id": "apodex/apodex-1.1-mini:free",
-        "name": "Apodex: Apodex 1.1 Mini (free) (Kilo)",
+        "id": "baidu/ernie-5.5-flash-preview:free",
+        "name": "Baidu: ERNIE-5.5-Flash-Preview (free) (Kilo)",
         "reasoning": true,
         "input": [
           "text"
         ],
-        "contextWindow": 262144,
+        "contextWindow": 1024000,
         "maxTokens": 65536
       },
       {
@@ -28,14 +28,15 @@
         "maxTokens": 64000
       },
       {
-        "id": "kilo-auto/free",
-        "name": "Auto Free (Kilo)",
+        "id": "inclusionai/ling-3.2-flash:free",
+        "name": "inclusionAI: Ling 3.2 Flash (free) (Kilo)",
         "reasoning": true,
         "input": [
-          "text"
+          "text",
+          "image"
         ],
-        "contextWindow": 256000,
-        "maxTokens": 32768
+        "contextWindow": 1048576,
+        "maxTokens": 65536
       },
       {
         "id": "liquid/lfm-3-1.7b:free",
@@ -176,7 +177,28 @@
         "maxTokens": 32768
       }
     ],
-    "llm7": [],
+    "llm7": [
+      {
+        "id": "DeepSeek-V4-Flash-0731",
+        "name": "DeepSeek-V4-Flash-0731 (LLM7)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 400000,
+        "maxTokens": 32768
+      },
+      {
+        "id": "gpt-oss:20b",
+        "name": "gpt-oss:20b (LLM7)",
+        "reasoning": false,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 32768
+      }
+    ],
     "ollama-cloud": [
       {
         "id": "gemma4:31b",
@@ -268,6 +290,11 @@
       "status": "ok"
     },
     {
+      "model": "llm7/DeepSeek-V4-Flash-0731",
+      "score": 30.6,
+      "status": "ok"
+    },
+    {
       "model": "google/gemini-3.5-flash-lite",
       "score": 29.6,
       "status": "ok"
@@ -286,11 +313,6 @@
       "model": "ollama-cloud/gemma4:31b",
       "score": 25.8,
       "status": "unverified"
-    },
-    {
-      "model": "kilo/kilo-auto/free",
-      "score": 24.7,
-      "status": "ok"
     },
     {
       "model": "kilo/openrouter/free",
@@ -369,7 +391,7 @@
       "status": "ok"
     },
     {
-      "model": "kilo/apodex/apodex-1.1-mini:free",
+      "model": "kilo/baidu/ernie-5.5-flash-preview:free",
       "score": 16.2,
       "status": "ok"
     },
@@ -389,6 +411,11 @@
       "status": "ok"
     },
     {
+      "model": "kilo/inclusionai/ling-3.2-flash:free",
+      "score": 15.3,
+      "status": "unverified"
+    },
+    {
       "model": "ovh/Mistral-Small-3.2-24B-Instruct-2506",
       "rpm": 2,
       "score": 14.5,
@@ -406,9 +433,9 @@
       "status": "ok"
     },
     {
-      "model": "openrouter/apodex/apodex-1.1-mini:free",
-      "score": 11.3,
-      "status": "unverified"
+      "model": "llm7/gpt-oss:20b",
+      "score": 12,
+      "status": "ok"
     },
     {
       "model": "openrouter/baidu/ernie-5.5-flash-preview:free",
@@ -422,11 +449,6 @@
     },
     {
       "model": "openrouter/google/gemma-4-26b-a4b-it:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/liquid/lfm-2.5-2.6b:free",
       "score": 11.3,
       "status": "unverified"
     }
