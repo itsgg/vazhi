@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-15T07:57:53.414Z",
+  "generated": "2026-11-16T08:05:43.246Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -288,15 +288,20 @@
       "status": "ok"
     },
     {
-      "model": "ovh/Qwen3.6-27B",
-      "rpm": 2,
-      "score": 45.9,
-      "status": "ok"
-    },
-    {
       "model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free",
       "score": 45.2,
       "status": "unverified"
+    },
+    {
+      "model": "google/gemini-3.6-flash",
+      "score": 40.8,
+      "status": "ok"
+    },
+    {
+      "model": "ovh/Qwen3.6-27B",
+      "rpm": 2,
+      "score": 39.8,
+      "status": "ok"
     },
     {
       "model": "ovh/gpt-oss-120b",
@@ -307,11 +312,6 @@
     {
       "model": "llm7/DeepSeek-V4-Flash-0731",
       "score": 30.6,
-      "status": "ok"
-    },
-    {
-      "model": "google/gemini-3.5-flash-lite",
-      "score": 29.6,
       "status": "ok"
     },
     {
@@ -328,16 +328,6 @@
       "model": "ollama-cloud/gemma4:31b",
       "score": 25.8,
       "status": "unverified"
-    },
-    {
-      "model": "kilo/openrouter/free",
-      "score": 24.7,
-      "status": "ok"
-    },
-    {
-      "model": "google/gemini-3.6-flash",
-      "score": 24.5,
-      "status": "ok"
     },
     {
       "model": "kilo/cohere/north-mini-code:free",
@@ -365,9 +355,19 @@
       "status": "ok"
     },
     {
+      "model": "kilo/openrouter/free",
+      "score": 21.4,
+      "status": "ok"
+    },
+    {
       "model": "cloudflare-workers-ai/@cf/zai-org/glm-4.7-flash",
       "score": 20.6,
       "status": "unverified"
+    },
+    {
+      "model": "google/gemini-3.5-flash-lite",
+      "score": 17.8,
+      "status": "ok"
     },
     {
       "model": "openrouter/nvidia/nemotron-3.5-lightning:free",
@@ -391,6 +391,11 @@
     },
     {
       "model": "nvidia/poolside/laguna-xs-2.1",
+      "score": 17,
+      "status": "ok"
+    },
+    {
+      "model": "nvidia/stepfun-ai/step-5-preview",
       "score": 17,
       "status": "ok"
     },
@@ -454,11 +459,6 @@
     },
     {
       "model": "openrouter/dots-studio/dots-3-note-preview:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/google/gemma-4-26b-a4b-it:free",
       "score": 11.3,
       "status": "unverified"
     }
