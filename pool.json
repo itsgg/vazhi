@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-16T08:05:43.246Z",
+  "generated": "2026-11-17T09:20:49.489Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -28,15 +28,14 @@
         "maxTokens": 64000
       },
       {
-        "id": "inclusionai/ling-3.2-flash:free",
-        "name": "inclusionAI: Ling 3.2 Flash (free) (Kilo)",
+        "id": "kilo-auto/free",
+        "name": "Auto Free (Kilo)",
         "reasoning": true,
         "input": [
-          "text",
-          "image"
+          "text"
         ],
-        "contextWindow": 1048576,
-        "maxTokens": 65536
+        "contextWindow": 256000,
+        "maxTokens": 32768
       },
       {
         "id": "liquid/lfm-3-1.7b:free",
@@ -191,11 +190,21 @@
       {
         "id": "glm-5.3-flash",
         "name": "glm-5.3-flash (LLM7)",
+        "reasoning": false,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 1000000,
+        "maxTokens": 32768
+      },
+      {
+        "id": "gpt-oss:120b",
+        "name": "gpt-oss:120b (LLM7)",
         "reasoning": true,
         "input": [
           "text"
         ],
-        "contextWindow": 128000,
+        "contextWindow": 131000,
         "maxTokens": 32768
       },
       {
@@ -330,6 +339,11 @@
       "status": "unverified"
     },
     {
+      "model": "kilo/kilo-auto/free",
+      "score": 24.7,
+      "status": "ok"
+    },
+    {
       "model": "kilo/cohere/north-mini-code:free",
       "score": 23.7,
       "status": "ok"
@@ -347,6 +361,11 @@
     {
       "model": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
       "score": 22.5,
+      "status": "ok"
+    },
+    {
+      "model": "llm7/gpt-oss:120b",
+      "score": 22.2,
       "status": "ok"
     },
     {
@@ -426,11 +445,6 @@
       "status": "ok"
     },
     {
-      "model": "kilo/inclusionai/ling-3.2-flash:free",
-      "score": 15.3,
-      "status": "unverified"
-    },
-    {
       "model": "ovh/Mistral-Small-3.2-24B-Instruct-2506",
       "rpm": 2,
       "score": 14.5,
@@ -454,11 +468,6 @@
     },
     {
       "model": "openrouter/baidu/ernie-5.5-flash-preview:free",
-      "score": 11.3,
-      "status": "unverified"
-    },
-    {
-      "model": "openrouter/dots-studio/dots-3-note-preview:free",
       "score": 11.3,
       "status": "unverified"
     }
