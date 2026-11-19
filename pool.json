@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-18T08:41:12.859Z",
+  "generated": "2026-11-19T08:55:31.762Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -26,6 +26,17 @@
         ],
         "contextWindow": 256000,
         "maxTokens": 64000
+      },
+      {
+        "id": "inclusionai/ling-3.2-flash:free",
+        "name": "inclusionAI: Ling 3.2 Flash (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 1048576,
+        "maxTokens": 65536
       },
       {
         "id": "kilo-auto/free",
@@ -99,6 +110,16 @@
         ],
         "contextWindow": 1048576,
         "maxTokens": 65536
+      },
+      {
+        "id": "recursive/flint-v1.0:free",
+        "name": "Recursive: Flint (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 262144,
+        "maxTokens": 65536
       }
     ],
     "ovh": [
@@ -163,8 +184,18 @@
         "maxTokens": 16384
       },
       {
-        "id": "qwen3-vl-30b-a3b",
-        "name": "qwen3-vl-30b-a3b (OVH)",
+        "id": "Olala-v1.0-mini-7A1B",
+        "name": "Olala-v1.0-mini-7A1B (OVH)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 16384
+      },
+      {
+        "id": "Olala-v1.0-summarise",
+        "name": "Olala-v1.0-summarise (OVH)",
         "reasoning": true,
         "input": [
           "text"
@@ -208,16 +239,6 @@
     ],
     "llm7": [
       {
-        "id": "DeepSeek-V4-Flash-0731",
-        "name": "DeepSeek-V4-Flash-0731 (LLM7)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 400000,
-        "maxTokens": 32768
-      },
-      {
         "id": "gemma4:31b",
         "name": "gemma4:31b (LLM7)",
         "reasoning": false,
@@ -235,16 +256,6 @@
           "text"
         ],
         "contextWindow": 1048576,
-        "maxTokens": 32768
-      },
-      {
-        "id": "gpt-oss:120b",
-        "name": "gpt-oss:120b (LLM7)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 131000,
         "maxTokens": 32768
       }
     ],
@@ -350,11 +361,6 @@
       "status": "ok"
     },
     {
-      "model": "llm7/DeepSeek-V4-Flash-0731",
-      "score": 30.6,
-      "status": "ok"
-    },
-    {
       "model": "ollama-cloud/gpt-oss:120b",
       "score": 28.1,
       "status": "unverified"
@@ -395,11 +401,6 @@
       "status": "ok"
     },
     {
-      "model": "llm7/gpt-oss:120b",
-      "score": 22.2,
-      "status": "ok"
-    },
-    {
       "model": "kilo/nvidia/nemotron-3.5-lightning:free",
       "score": 21.4,
       "status": "ok"
@@ -435,11 +436,6 @@
       "status": "unverified"
     },
     {
-      "model": "nvidia/minimaxai/minimax-m3.1-flash",
-      "score": 17,
-      "status": "ok"
-    },
-    {
       "model": "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
       "score": 17,
       "status": "ok"
@@ -466,6 +462,11 @@
       "status": "ok"
     },
     {
+      "model": "kilo/inclusionai/ling-3.2-flash:free",
+      "score": 16.2,
+      "status": "ok"
+    },
+    {
       "model": "kilo/liquid/lfm-3-1.7b:free",
       "score": 16.2,
       "status": "ok"
@@ -477,6 +478,11 @@
     },
     {
       "model": "kilo/particle-ai/particle-1:free",
+      "score": 16.2,
+      "status": "ok"
+    },
+    {
+      "model": "kilo/recursive/flint-v1.0:free",
       "score": 16.2,
       "status": "ok"
     },
@@ -499,7 +505,13 @@
       "status": "ok"
     },
     {
-      "model": "ovh/qwen3-vl-30b-a3b",
+      "model": "ovh/Olala-v1.0-mini-7A1B",
+      "rpm": 2,
+      "score": 14.5,
+      "status": "ok"
+    },
+    {
+      "model": "ovh/Olala-v1.0-summarise",
       "rpm": 2,
       "score": 14.5,
       "status": "ok"
