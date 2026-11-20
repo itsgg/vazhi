@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-19T08:55:31.762Z",
+  "generated": "2026-11-20T08:43:35.041Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -16,16 +16,6 @@
         ],
         "contextWindow": 1024000,
         "maxTokens": 65536
-      },
-      {
-        "id": "cohere/north-mini-code:free",
-        "name": "Cohere: North Mini Code (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 256000,
-        "maxTokens": 64000
       },
       {
         "id": "inclusionai/ling-3.2-flash:free",
@@ -204,6 +194,16 @@
         "maxTokens": 16384
       },
       {
+        "id": "qwen3-vl-30b-a3b",
+        "name": "qwen3-vl-30b-a3b (OVH)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 16384
+      },
+      {
         "id": "Qwen3.5-397B-A17B",
         "name": "Qwen3.5-397B-A17B (OVH)",
         "reasoning": true,
@@ -213,6 +213,16 @@
         ],
         "contextWindow": 262144,
         "maxTokens": 32768
+      },
+      {
+        "id": "Qwen3.5-9B",
+        "name": "Qwen3.5-9B (OVH)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 16384
       },
       {
         "id": "Qwen3.6-27B",
@@ -226,6 +236,16 @@
         "maxTokens": 32768
       },
       {
+        "id": "qwen3.6-35b-a3b",
+        "name": "qwen3.6-35b-a3b (OVH)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 16384
+      },
+      {
         "id": "Qwen3.8-27B",
         "name": "Qwen3.8-27B (OVH)",
         "reasoning": true,
@@ -237,28 +257,7 @@
         "maxTokens": 32768
       }
     ],
-    "llm7": [
-      {
-        "id": "gemma4:31b",
-        "name": "gemma4:31b (LLM7)",
-        "reasoning": false,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 262000,
-        "maxTokens": 32768
-      },
-      {
-        "id": "glm-5.3-flash",
-        "name": "glm-5.3-flash (LLM7)",
-        "reasoning": false,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 1048576,
-        "maxTokens": 32768
-      }
-    ],
+    "llm7": [],
     "ollama-cloud": [
       {
         "id": "gemma4:31b",
@@ -339,11 +338,6 @@
       "status": "ok"
     },
     {
-      "model": "llm7/glm-5.3-flash",
-      "score": 46.8,
-      "status": "ok"
-    },
-    {
       "model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free",
       "score": 45.2,
       "status": "unverified"
@@ -381,16 +375,6 @@
       "status": "ok"
     },
     {
-      "model": "kilo/cohere/north-mini-code:free",
-      "score": 23.7,
-      "status": "ok"
-    },
-    {
-      "model": "openrouter/cohere/north-mini-code:free",
-      "score": 22.6,
-      "status": "unverified"
-    },
-    {
       "model": "openrouter/google/gemma-4-31b-it:free",
       "score": 22.6,
       "status": "unverified"
@@ -416,11 +400,6 @@
       "status": "unverified"
     },
     {
-      "model": "llm7/gemma4:31b",
-      "score": 20.4,
-      "status": "ok"
-    },
-    {
       "model": "google/gemini-3.5-flash-lite",
       "score": 17.8,
       "status": "ok"
@@ -434,6 +413,11 @@
       "model": "openrouter/openrouter/free",
       "score": 17.3,
       "status": "unverified"
+    },
+    {
+      "model": "nvidia/minimaxai/minimax-m3.1-flash",
+      "score": 17,
+      "status": "ok"
     },
     {
       "model": "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
@@ -512,6 +496,24 @@
     },
     {
       "model": "ovh/Olala-v1.0-summarise",
+      "rpm": 2,
+      "score": 14.5,
+      "status": "ok"
+    },
+    {
+      "model": "ovh/qwen3-vl-30b-a3b",
+      "rpm": 2,
+      "score": 14.5,
+      "status": "ok"
+    },
+    {
+      "model": "ovh/Qwen3.5-9B",
+      "rpm": 2,
+      "score": 14.5,
+      "status": "ok"
+    },
+    {
+      "model": "ovh/qwen3.6-35b-a3b",
       "rpm": 2,
       "score": 14.5,
       "status": "ok"
