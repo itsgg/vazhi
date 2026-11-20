@@ -352,6 +352,8 @@ async function main() {
 		sharedLimits: ["kilo", "llm7"],
 		models,
 		pool: ranked,
+		// Ranked by hand, and checked against the free rules like the pool.
+		fast: read("data/fast.json").fast,
 	});
 	const previous = existsSync(ROOT + "pool.json") ? parsePool(read("pool.json")) : undefined;
 	const changed = !previous || stable(previous) !== stable(next);

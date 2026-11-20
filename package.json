@@ -1,7 +1,7 @@
 {
   "name": "@itsgg/vazhi",
   "version": "0.1.2",
-  "description": "Free LLM auto-router for the pi coding agent: every request goes to the best free model that is up, from a model list rebuilt nightly.",
+  "description": "Free LLM auto-router for the pi coding agent and the command line: every request goes to the best free model that is up, from a model list rebuilt nightly.",
   "type": "module",
   "keywords": [
     "pi-package",
@@ -12,7 +12,8 @@
     "free",
     "nvidia-nim",
     "openrouter",
-    "gemini"
+    "gemini",
+    "cli"
   ],
   "author": "itsgg <me@itsgg.com>",
   "license": "MIT",
@@ -24,8 +25,19 @@
   "bugs": {
     "url": "https://github.com/itsgg/vazhi/issues"
   },
+  "bin": {
+    "vazhi": "dist/cli.js"
+  },
+  "exports": {
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "default": "./dist/core.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "src",
+    "dist",
     "pool.json",
     "README.md",
     "LICENSE"
@@ -41,6 +53,8 @@
   "scripts": {
     "test": "node --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
     "discover": "node scripts/discover.ts",
     "eval": "python3 -I scripts/eval.py"
   },

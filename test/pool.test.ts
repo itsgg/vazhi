@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { loadPool, parsePool, refreshRemote, REMOTE_URL, type PoolFile } from "../src/pool.ts";
+import { agentDir, loadPool, parsePool, refreshRemote, REMOTE_URL, type PoolFile } from "../src/pool.ts";
 
 const meta = { id: "m1:free", name: "M1", reasoning: true, input: ["text"], contextWindow: 128000, maxTokens: 32768 };
 
@@ -129,4 +129,46 @@ test("a failed download that ends after a successful one keeps the new pool (rev
 	assert.equal(cached.pool.generated, "2026-10-05", "the successful download survives the late failure");
 	assert.equal(cached.retryAt, 0, "and no retry delay is set");
 	rmSync(dir, { recursive: true, force: true });
+});
+
+test("the fast list obeys the free rules, keeps a known effort and drops an unknown one", () => {
+	const p = parsePool({
+		version: 1,
+		pool: [],
+		fast: [
+			{ model: "groq/qwen/qwen3.8-27b", effort: "none" },
+			{ model: "groq/moonshotai/kimi-k3" },
+			{ model: "anthropic/claude-opus-5" },
+			{ model: "ovh/gpt-oss-20b", rpm: 2, effort: "turbo" },
+		],
+	});
+	assert.deepEqual(p.fast, [{ model: "groq/qwen/qwen3.8-27b", effort: "none" }, { model: "ovh/gpt-oss-20b", rpm: 2 }]);
+	assert.deepEqual(parsePool({ version: 1, pool: [] }).fast, [], "a pool from before the fast list");
+});
+
+test("loadPool: a nightly pool without a fast list falls back to the bundled one; config replaces and excludes", () => {
+	const dir = mkdtempSync(join(tmpdir(), "vazhi-fast-"));
+	const bundled = { ...pool("2026-10-01", ["nvidia/a"]), fast: [{ model: "groq/openai/gpt-oss-20b" }, { model: "ovh/m" }] };
+	writeFileSync(join(dir, "pool-cache.json"), JSON.stringify({ fetchedAt: 1, pool: pool("2026-10-02", ["nvidia/a"]) }));
+	const loaded = loadPool(dir, bundled);
+	assert.equal(loaded.source, "nightly");
+	assert.deepEqual(loaded.pool.fast.map((e) => e.model), ["groq/openai/gpt-oss-20b", "ovh/m"]);
+	writeFileSync(join(dir, "config.json"), JSON.stringify({ exclude: ["ovh"] }));
+	assert.deepEqual(loadPool(dir, bundled).pool.fast.map((e) => e.model), ["groq/openai/gpt-oss-20b"]);
+	writeFileSync(join(dir, "config.json"), JSON.stringify({ fast: [{ model: "my/own" }] }));
+	assert.deepEqual(loadPool(dir, bundled).pool.fast.map((e) => e.model), ["my/own"]);
+	rmSync(dir, { recursive: true });
+});
+
+test("the committed fast list matches data/fast.json and survives validation", () => {
+	const committed = JSON.parse(readFileSync(new URL("../pool.json", import.meta.url), "utf8"));
+	const source = JSON.parse(readFileSync(new URL("../data/fast.json", import.meta.url), "utf8"));
+	assert.deepEqual(committed.fast, source.fast);
+	assert.equal(parsePool(committed).fast.length, source.fast.length, "every fast row is free and well formed");
+});
+
+test("agentDir follows PI_CODING_AGENT_DIR with ~ as pi does", () => {
+	assert.equal(agentDir({ PI_CODING_AGENT_DIR: "/x/y" }), "/x/y");
+	assert.equal(agentDir({ PI_CODING_AGENT_DIR: "~/a" }), join(homedir(), "a"));
+	assert.equal(agentDir({}), join(homedir(), ".pi", "agent"));
 });

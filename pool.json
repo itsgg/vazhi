@@ -518,5 +518,33 @@
       "score": 14.5,
       "status": "ok"
     }
+  ],
+  "fast": [
+    {
+      "model": "groq/qwen/qwen3.8-27b",
+      "effort": "none"
+    },
+    {
+      "model": "groq/openai/gpt-oss-120b",
+      "effort": "low"
+    },
+    {
+      "model": "groq/openai/gpt-oss-20b",
+      "effort": "low"
+    },
+    {
+      "model": "google/gemini-3.5-flash-lite",
+      "effort": "minimal"
+    },
+    {
+      "model": "nvidia/minimaxai/minimax-m3.1-flash"
+    },
+    {
+      "model": "kilo/kilo-auto/free"
+    },
+    {
+      "model": "ovh/gpt-oss-20b",
+      "rpm": 2
+    }
   ]
 }

@@ -6,14 +6,12 @@
  * skips the model that failed. Quota, auth and 404 errors are not retryable for pi, so the
  * message_end handler tags them as unavailable, which makes pi retry and lets route() move on.
  */
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { Api, AssistantMessage, Model } from "@earendil-works/pi-ai";
 import { isContextOverflow, isRetryableAssistantError } from "@earendil-works/pi-ai/compat";
 import { getAgentDir, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { loadPool, parsePool, refreshDue, refreshRemote, type PoolFile } from "./pool.ts";
-import { ANONYMOUS_KEY, OWN_PROVIDERS } from "./providers.ts";
+import { bundledPool, loadPool, refreshDue, refreshRemote, type PoolFile } from "./pool.ts";
+import { ANONYMOUS_KEY, NVCF_POLL_SECONDS, OWN_PROVIDERS } from "./providers.ts";
 import {
 	choose,
 	classify,
@@ -128,13 +126,7 @@ export function retryable(message: AssistantMessage, key: string, kind: Kind, ms
 	return { ...message, errorMessage: `${short}, ${cooling} ${MARKER}` };
 }
 
-/**
- * How long NVIDIA may hold a request it cannot serve. pi's catalog asks for 3600 s, so a model
- * whose workers are down hangs until the client gives up (45 s with the README's settings); at
- * 5 s NVIDIA answers 504 within about 7 s and vazhi reroutes. A model that is working is not cut
- * off: measured 2026-10-11, a request that took 59 s to its first byte still came back 200.
- */
-export const NVCF_POLL_SECONDS = "5";
+export { NVCF_POLL_SECONDS };
 
 /**
  * Adjust request headers: drop the anonymous placeholder so keyless providers get no
@@ -147,10 +139,6 @@ export function adjustHeaders(headers: Record<string, string | null>, routing: b
 		if (lower === "authorization" && headers[name] === `Bearer ${ANONYMOUS_KEY}`) headers[name] = null;
 		if (routing && lower === "nvcf-poll-seconds" && headers[name] !== null) headers[name] = NVCF_POLL_SECONDS;
 	}
-}
-
-function readBundled(): PoolFile {
-	return parsePool(JSON.parse(readFileSync(fileURLToPath(new URL("../pool.json", import.meta.url)), "utf8")));
 }
 
 function registerProviders(pi: ExtensionAPI, pool: PoolFile): void {
@@ -205,7 +193,7 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
 export default function (pi: ExtensionAPI) {
 	const dir = join(getAgentDir(), "vazhi");
 	const store = new Store(dir);
-	const bundled = readBundled();
+	const bundled = bundledPool();
 	const current = () => loadPool(dir, bundled);
 	registerProviders(pi, current().pool);
 

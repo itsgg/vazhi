@@ -38,12 +38,29 @@ No key is needed. Without one, vazhi uses Kilo, OVHcloud and LLM7. Free keys add
 | `openrouter` | openrouter.ai/keys | 50 free requests a day across its `:free` models |
 | `ollama-cloud` | ollama.com/settings/keys | a small monthly credit for its starter models |
 | `zai-free` | z.ai | GLM 4.7 Flash, no daily cap |
+| `groq` | console.groq.com | the fast list only: Qwen3.8 27B and GPT-OSS answer in under a second; 30 requests a minute, 1,000 a day |
 
 Use keys from free plans. A paid key is billed by its provider, for example a Google key on a project with billing enabled.
 
 ## Commands
 
 `/vazhi` shows the pool and what is cooling down. `/vazhi reset` clears the cooldowns. `/vazhi update` downloads the latest pool now.
+
+## Command line
+
+The same router runs without pi. `vazhi ask` sends one question to the best free model that is up and prints the answer:
+
+```bash
+vazhi ask "what does the -S flag of ls do"
+git diff | vazhi ask --system "Write a one-line commit subject for this diff."
+vazhi ask --fast --system "Reply with one bash command." "find files over 1GB"
+```
+
+`--fast` asks the fast list instead of the coding pool: models that answer short questions in about a second, Groq first. When the first has not answered within 1.5 seconds, a second is asked too and the first answer wins. `--json` prints the answer with the model and the time taken. The exit status is 0 for an answer, 1 when no model answered, 2 for bad usage.
+
+`vazhi status [--fast]`, `vazhi reset` and `vazhi update` do what `/vazhi` does in pi. The command line shares pi's state and keys: a model cooling in pi is skipped here, and the other way round. Keys come from pi's `~/.pi/agent/auth.json`, then from `GROQ_API_KEY`, `GEMINI_API_KEY`, `NVIDIA_API_KEY`, `OPENROUTER_API_KEY`, `OLLAMA_API_KEY` and `ZAI_API_KEY`. Without any, Kilo and OVH still answer.
+
+From JavaScript, `import { ask } from "@itsgg/vazhi/core"` does the same.
 
 ## How it works
 
@@ -61,6 +78,8 @@ Each night a GitHub Action lists the free models with tool calling in each provi
 
 The rest are ranked by quality times capacity. Quality is the [Artificial Analysis](https://artificialanalysis.ai/) coding index, or a manual score in `data/seed-scores.json` for models AA does not cover. Capacity reflects how much free use the provider allows. Once a week CI runs three small coding tasks through pi on the top ten models, and the pass rates adjust the scores.
 
+The fast list is ranked by hand in `data/fast.json` from a latency probe and copied into the nightly file, under the same free rules.
+
 Installed copies check for a new list at each session and turn, and download it once theirs is 12 hours old. Code changes arrive with `pi update --extensions`.
 
 ## Configuration
@@ -75,7 +94,7 @@ Installed copies check for a new list at each session and turn, and download it 
 }
 ```
 
-`exclude` drops models or whole providers. `prefer` moves models to the front. `pool` replaces the list with your own, as `{ "model": "provider/id" }` entries. `autoUpdate: false` stops the nightly download.
+`exclude` drops models or whole providers, from the pool and the fast list. `prefer` moves models to the front of the pool. `pool` and `fast` replace either list with your own, as `{ "model": "provider/id" }` entries; a fast entry may add `"effort": "none"`, `"minimal"` or `"low"`, sent as the model's reasoning effort. `autoUpdate: false` stops the nightly download.
 
 ## Safety
 
@@ -93,6 +112,7 @@ The downloaded list names models, never URLs or keys. Base URLs live in `src/pro
 npm install
 npm test
 npm run typecheck
+node src/cli.ts ask --fast "hello"                      # the command line from this checkout
 NVIDIA_API_KEY=... node scripts/discover.ts --dry-run   # print tonight's pool
 pi -e ./src/index.ts                                    # run pi with this checkout
 ```

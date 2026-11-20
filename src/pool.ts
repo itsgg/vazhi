@@ -8,9 +8,15 @@
  *    hour after a failed try). It may only name models free by each provider's rule (providers.ts).
  * 3. <agent dir>/vazhi/config.json, the user's: replace the pool, exclude or prefer models, or
  *    turn the download off. Nothing in it is restricted; it is the user's own choice.
+ *
+ * Besides the pool, a short `fast` list serves one-shot questions where time to the answer
+ * matters more than coding skill (`vazhi ask --fast`). It comes from data/fast.json through the
+ * same nightly file, under the same free rules.
  */
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { allowedInRemotePool, OWN_PROVIDERS } from "./providers.ts";
 import { HOUR, type PoolEntry } from "./router.ts";
 
@@ -33,6 +39,14 @@ export interface RankedEntry extends PoolEntry {
 	status?: string;
 }
 
+/** How hard a fast-list model may think before it answers, sent as reasoning_effort. */
+export const EFFORTS = ["none", "minimal", "low", "medium", "high"] as const;
+export type Effort = (typeof EFFORTS)[number];
+
+export interface FastEntry extends PoolEntry {
+	effort?: Effort;
+}
+
 export interface PoolFile {
 	version: 1;
 	generated: string;
@@ -41,6 +55,8 @@ export interface PoolFile {
 	/** Model lists for vazhi's own providers. */
 	models: Record<string, ModelMeta[]>;
 	pool: RankedEntry[];
+	/** Quick models for one-shot questions, fastest first; empty when the file has none. */
+	fast: FastEntry[];
 }
 
 export interface UserConfig {
@@ -51,6 +67,20 @@ export interface UserConfig {
 	prefer?: string[];
 	/** Fetch the nightly pool from GitHub. Default true. */
 	autoUpdate?: boolean;
+	/** Replace the fast list. */
+	fast?: FastEntry[];
+}
+
+/** pi's agent directory, resolved as pi resolves it, so the CLI and pi share one state. */
+export function agentDir(env: NodeJS.ProcessEnv = process.env): string {
+	const dir = env.PI_CODING_AGENT_DIR;
+	if (dir) return dir === "~" ? homedir() : dir.startsWith("~/") ? join(homedir(), dir.slice(2)) : dir;
+	return join(homedir(), ".pi", "agent");
+}
+
+/** Where vazhi keeps its state, cache and config. */
+export function stateDir(env: NodeJS.ProcessEnv = process.env): string {
+	return join(agentDir(env), "vazhi");
 }
 
 const ID = /^[A-Za-z0-9._:@/+-]{1,200}$/;
@@ -66,6 +96,20 @@ function entry(raw: any): RankedEntry | undefined {
 	if (typeof raw.score === "number" && Number.isFinite(raw.score)) out.score = raw.score;
 	if (typeof raw.status === "string" && raw.status.length < 40) out.status = raw.status;
 	return out;
+}
+
+function fastEntry(raw: any): FastEntry | undefined {
+	const base = entry(raw);
+	if (!base) return undefined;
+	const out: FastEntry = { model: base.model };
+	if (base.rpm) out.rpm = base.rpm;
+	if (EFFORTS.includes(raw.effort)) out.effort = raw.effort;
+	return out;
+}
+
+function remoteAllowed(e: PoolEntry): boolean {
+	const slash = e.model.indexOf("/");
+	return allowedInRemotePool(e.model.slice(0, slash), e.model.slice(slash + 1));
 }
 
 function meta(raw: any): ModelMeta | undefined {
@@ -95,13 +139,10 @@ function meta(raw: any): ModelMeta | undefined {
  */
 export function parsePool(raw: any): PoolFile {
 	if (raw?.version !== 1 || !Array.isArray(raw.pool)) throw new Error("not a vazhi pool file (version 1)");
-	const pool = raw.pool
-		.map(entry)
-		.filter((e: RankedEntry | undefined): e is RankedEntry => {
-			if (!e) return false;
-			const slash = e.model.indexOf("/");
-			return allowedInRemotePool(e.model.slice(0, slash), e.model.slice(slash + 1));
-		});
+	const pool = raw.pool.map(entry).filter((e: RankedEntry | undefined): e is RankedEntry => !!e && remoteAllowed(e));
+	const fast = (Array.isArray(raw.fast) ? raw.fast : [])
+		.map(fastEntry)
+		.filter((e: FastEntry | undefined): e is FastEntry => !!e && remoteAllowed(e));
 	const models: Record<string, ModelMeta[]> = {};
 	for (const provider of Object.keys(OWN_PROVIDERS)) {
 		const list = Array.isArray(raw.models?.[provider]) ? raw.models[provider] : [];
@@ -110,7 +151,12 @@ export function parsePool(raw: any): PoolFile {
 			.filter((m: ModelMeta | undefined): m is ModelMeta => !!m && allowedInRemotePool(provider, m.id));
 	}
 	const sharedLimits = Array.isArray(raw.sharedLimits) ? raw.sharedLimits.filter((p: unknown) => typeof p === "string") : [];
-	return { version: 1, generated: typeof raw.generated === "string" ? raw.generated : "", sharedLimits, models, pool };
+	return { version: 1, generated: typeof raw.generated === "string" ? raw.generated : "", sharedLimits, models, pool, fast };
+}
+
+/** The pool.json shipped in the package. */
+export function bundledPool(): PoolFile {
+	return parsePool(readJson(fileURLToPath(new URL("../pool.json", import.meta.url))));
 }
 
 function readJson(file: string): any {
@@ -139,6 +185,7 @@ export function readConfig(dir: string): UserConfig {
 	if (Array.isArray(raw?.exclude)) config.exclude = raw.exclude.filter((x: unknown) => typeof x === "string");
 	if (Array.isArray(raw?.prefer)) config.prefer = raw.prefer.filter(isModelKey);
 	if (typeof raw?.autoUpdate === "boolean") config.autoUpdate = raw.autoUpdate;
+	if (Array.isArray(raw?.fast)) config.fast = raw.fast.map(fastEntry).filter((e: FastEntry | undefined): e is FastEntry => !!e);
 	return (lastConfig = config);
 }
 
@@ -175,8 +222,10 @@ export function loadPool(dir: string, bundled: PoolFile): { pool: PoolFile; sour
 		const front = config.prefer.map((m) => entries.find((e) => e.model === m) ?? { model: m });
 		entries = [...front, ...entries.filter((e) => !config.prefer!.includes(e.model))];
 	}
+	// A nightly pool from before the fast list existed has none; the bundled one stands in.
+	const fast = (config.fast ?? (base.fast.length ? base.fast : bundled.fast)).filter((e) => !excluded(e.model));
 	const source: PoolSource = config.pool ? "config" : base === cached ? "nightly" : "bundled";
-	return { pool: { ...base, pool: entries }, source };
+	return { pool: { ...base, pool: entries, fast }, source };
 }
 
 /** Whether a download is due: the copy is 12 hours old and no failed try asked to wait. */
