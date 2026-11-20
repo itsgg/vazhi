@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-20T08:43:35.041Z",
+  "generated": "2026-11-20T15:16:02.785Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -204,17 +204,6 @@
         "maxTokens": 16384
       },
       {
-        "id": "Qwen3.5-397B-A17B",
-        "name": "Qwen3.5-397B-A17B (OVH)",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "contextWindow": 262144,
-        "maxTokens": 32768
-      },
-      {
         "id": "Qwen3.5-9B",
         "name": "Qwen3.5-9B (OVH)",
         "reasoning": true,
@@ -257,7 +246,18 @@
         "maxTokens": 32768
       }
     ],
-    "llm7": [],
+    "llm7": [
+      {
+        "id": "gpt-oss:20b",
+        "name": "gpt-oss:20b (LLM7)",
+        "reasoning": false,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 32768
+      }
+    ],
     "ollama-cloud": [
       {
         "id": "gemma4:31b",
@@ -330,12 +330,6 @@
       "model": "ollama-cloud/nemotron-3-ultra",
       "score": 51.7,
       "status": "unverified"
-    },
-    {
-      "model": "ovh/Qwen3.5-397B-A17B",
-      "rpm": 2,
-      "score": 47.6,
-      "status": "ok"
     },
     {
       "model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free",
@@ -430,11 +424,6 @@
       "status": "ok"
     },
     {
-      "model": "nvidia/stepfun-ai/step-5-preview",
-      "score": 17,
-      "status": "ok"
-    },
-    {
       "model": "ovh/gpt-oss-20b",
       "rpm": 2,
       "score": 17,
@@ -516,6 +505,16 @@
       "model": "ovh/qwen3.6-35b-a3b",
       "rpm": 2,
       "score": 14.5,
+      "status": "ok"
+    },
+    {
+      "model": "google/gemini-3.1-flash-lite",
+      "score": 13.6,
+      "status": "ok"
+    },
+    {
+      "model": "llm7/gpt-oss:20b",
+      "score": 12,
       "status": "ok"
     }
   ],
