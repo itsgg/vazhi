@@ -14,6 +14,8 @@ test("the downloaded pool can only reach models free by each provider's terms (r
 		["ollama-cloud", "nemotron-3-ultra"],
 		["zai-free", "glm-4.7-flash"],
 		["cloudflare-workers-ai", "@cf/zai-org/glm-4.7-flash"],
+		["groq", "qwen/qwen3.8-27b"],
+		["groq", "openai/gpt-oss-20b"],
 	];
 	const refused: [string, string][] = [
 		["kilo", "anthropic/claude-opus-5"],
@@ -23,6 +25,7 @@ test("the downloaded pool can only reach models free by each provider's terms (r
 		["ollama-cloud", "kimi-k3"],
 		["zai-free", "glm-5.3-flash"],
 		["cloudflare-workers-ai", "@cf/moonshotai/kimi-k2.6"],
+		["groq", "moonshotai/kimi-k3"],
 		["anthropic", "claude-opus-5"],
 		["toString", "x"],
 		["__proto__", "x"],
