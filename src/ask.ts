@@ -211,8 +211,8 @@ export async function ask(options: AskOptions): Promise<Answer> {
 			if (!(winner.error instanceof Empty)) {
 				store.update((state) => penalize(state, winner.model, message, Date.now(), pool.sharedLimits));
 			}
-			// Replace a failed model at once rather than at the next hedge.
-			if (running.size > 0 && running.size < limits.parallel) launch();
+			// With another model still answering, the next starts only if that one is slow too: the
+			// loop's hedge timer decides, so a model that just started is not raced at once.
 		}
 	} finally {
 		stopAll();

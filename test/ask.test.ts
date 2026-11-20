@@ -101,6 +101,19 @@ test("fast: a slow first model gets a second one asked after the hedge delay; th
 	assert.equal(store.load().models["groq/a"], undefined, "losing a race is not a failure");
 });
 
+test("fast: a failure while the hedged model is still answering starts no third model at once", async () => {
+	const { env } = setup();
+	// a is slow and then fails just after b was started by the hedge; b answers 1 s later.
+	const { doFetch, calls } = fakeFetch({
+		a: { status: 500, body: "boom", delayMs: HEDGE_AFTER + 100 },
+		b: { ...says("from b"), delayMs: 1000 },
+		"c:free": says("from c"),
+	});
+	const answer = await ask({ prompt: "q", fast: true, env, fetch: doFetch });
+	assert.equal(answer.text, "from b");
+	assert.deepEqual(calls.map((c) => c.model), ["a", "b"], "c is never asked");
+});
+
 test("an empty answer moves on without cooling the model", async () => {
 	const { env, store } = setup();
 	const { doFetch } = fakeFetch({ a: says("  <think>hmm</think>  "), b: says("pwd") });
