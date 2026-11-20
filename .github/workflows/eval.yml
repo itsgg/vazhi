@@ -23,7 +23,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --ignore-scripts
-      - run: npm install -g --ignore-scripts @earendil-works/pi-coding-agent@1.1.0
+      - run: npm install -g --ignore-scripts @earendil-works/pi-coding-agent@1.6.0
       - run: python3 -I scripts/eval.py --top 10
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}

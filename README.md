@@ -105,7 +105,7 @@ The downloaded list names models, never URLs or keys. Base URLs live in `src/pro
 ## Caveats
 
 - Free tiers may log prompts or train on them. Kilo, NVIDIA and OpenRouter's free providers say so.
-- vazhi builds on pi's virtual-model API, which pi marks experimental. Tested with pi 1.1.0.
+- vazhi builds on pi's virtual-model API, which pi marks experimental. Tested with pi 1.6.0.
 - Free limits change often. The capacity figures in `scripts/rank.ts` date from 2026-10-11.
 
 ## Development
