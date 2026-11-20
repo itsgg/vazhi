@@ -60,6 +60,8 @@ vazhi ask --fast --system "Reply with one bash command." "find files over 1GB"
 
 `vazhi status [--fast]`, `vazhi reset` and `vazhi update` do what `/vazhi` does in pi. The command line shares pi's state and keys: a model cooling in pi is skipped here, and the other way round. Keys come from pi's `~/.pi/agent/auth.json`, then from `GROQ_API_KEY`, `GEMINI_API_KEY`, `NVIDIA_API_KEY`, `OPENROUTER_API_KEY`, `OLLAMA_API_KEY` and `ZAI_API_KEY`. Without any, Kilo and OVH still answer.
 
+To use the command line without pi, `npm install -g --legacy-peer-deps @itsgg/vazhi`; the flag skips pi's packages, which only the extension needs. Its state (cooldowns, the downloaded pool and `config.json`) still lives in pi's directory, `~/.pi/agent/vazhi`, so the two share it when both are installed; set `PI_CODING_AGENT_DIR` to keep it somewhere else.
+
 From JavaScript, `import { ask } from "@itsgg/vazhi/core"` does the same.
 
 ## How it works
