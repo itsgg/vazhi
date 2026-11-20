@@ -114,9 +114,24 @@ The downloaded list names models, never URLs or keys. Base URLs live in `src/pro
 npm install
 npm test
 npm run typecheck
-node src/cli.ts ask --fast "hello"                      # the command line from this checkout
-NVIDIA_API_KEY=... node scripts/discover.ts --dry-run   # print tonight's pool
-pi -e ./src/index.ts                                    # run pi with this checkout
+```
+
+The command line from this checkout:
+
+```bash
+node src/cli.ts ask --fast "hello"
+```
+
+Tonight's pool, printed without writing it; with NVIDIA_API_KEY set, NVIDIA's models are probed too:
+
+```bash
+node scripts/discover.ts --dry-run
+```
+
+pi with this checkout as its extension:
+
+```bash
+pi -e ./src/index.ts
 ```
 
 Coding scores come from [Artificial Analysis](https://artificialanalysis.ai/). The provider list started from [awesome-free-llm-apis](https://github.com/mnfst/awesome-free-llm-apis).
