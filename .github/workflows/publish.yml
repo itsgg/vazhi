@@ -25,6 +25,9 @@ jobs:
       - run: npm test
       - name: Tag matches package.json
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      # The vazhi bin is dist/cli.js: build it here, not only through prepack, and refuse a
+      # package without it.
+      - run: npm run build && test -f dist/cli.js
       # Staged publishing needs npm 11.15.0 or later.
       - run: npm install -g --ignore-scripts npm@^11.15.0
       - run: npm stage publish
