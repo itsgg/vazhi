@@ -1,8 +1,8 @@
 {
-  "_comment": "The fast list for `vazhi ask --fast`, fastest first, copied into pool.json each night. Ranked by hand from a probe on 2026-11-20: three short command-generation requests each. Groq answered in 0.13-0.62 s; Flash-Lite with minimal effort in 1.3 s; MiniMax Flash on NVIDIA in 1.7-8 s; Kilo's auto router in 3.7-8 s; OVH gpt-oss-20b in 1.3-3.3 s within its 2 rpm. Nemotron 3.5 Lightning returned empty answers and Gemini Flash took over 16 s, so both are out. Keyless providers come last so a user without keys still gets an answer.",
+  "_comment": "The fast list for `vazhi ask --fast`, fastest first, copied into pool.json each night. Ranked by hand from a probe on 2026-11-20: three short command-generation requests each. Groq answered in 0.13-0.62 s; Flash-Lite with minimal effort in 1.3 s; MiniMax Flash on NVIDIA in 1.7-8 s; Kilo's auto router in 3.7-8 s; OVH gpt-oss-20b in 1.3-3.3 s within its 2 rpm. Nemotron 3.5 Lightning returned empty answers and Gemini Flash took over 16 s, so both are out. On 2026-11-20 GPT-OSS 120B moved ahead of Qwen3.8 27B: with sol's prompt, five runs each of three file requests, it was right 15/15 against Qwen's 11/15, at about 0.5 s against 0.2 s. Keyless providers come last so a user without keys still gets an answer.",
   "fast": [
-    { "model": "groq/qwen/qwen3.8-27b", "effort": "none" },
     { "model": "groq/openai/gpt-oss-120b", "effort": "low" },
+    { "model": "groq/qwen/qwen3.8-27b", "effort": "none" },
     { "model": "groq/openai/gpt-oss-20b", "effort": "low" },
     { "model": "google/gemini-3.5-flash-lite", "effort": "minimal" },
     { "model": "nvidia/minimaxai/minimax-m3.1-flash" },

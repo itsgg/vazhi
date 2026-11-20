@@ -521,12 +521,12 @@
   ],
   "fast": [
     {
-      "model": "groq/qwen/qwen3.8-27b",
-      "effort": "none"
-    },
-    {
       "model": "groq/openai/gpt-oss-120b",
       "effort": "low"
+    },
+    {
+      "model": "groq/qwen/qwen3.8-27b",
+      "effort": "none"
     },
     {
       "model": "groq/openai/gpt-oss-20b",
