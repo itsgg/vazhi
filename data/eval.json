@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-15T10:13:36Z",
+  "generated": "2026-11-22T10:41:07Z",
   "models": {
     "google/gemini-3.5-flash-lite": {
       "at": "2026-11-15T10:13:36Z",
@@ -27,29 +27,23 @@
       "total": 3
     },
     "google/gemini-3.6-flash": {
-      "at": "2026-10-25T08:05:35Z",
-      "passed": 0,
+      "at": "2026-11-22T10:41:07Z",
+      "passed": 1,
       "tasks": {
         "bugfix": {
-          "detail": "FAILED (failures=6)",
-          "pass": false,
-          "requests": 25,
-          "secs": 283.1
+          "detail": "OK",
+          "pass": true,
+          "requests": 10,
+          "secs": 71.3
         },
         "logs": {
           "detail": "got='' want='search'",
           "pass": false,
-          "requests": 23,
-          "secs": 72.3
-        },
-        "refactor": {
-          "detail": "out='' sig='KEYWORD_ONLY' leftover=True",
-          "pass": false,
-          "requests": 50,
-          "secs": 307.4
+          "requests": 29,
+          "secs": 149.9
         }
       },
-      "total": 3
+      "total": 2
     },
     "google/gemini-3.8-flash": {
       "at": "2026-10-18T07:37:32Z",
@@ -96,51 +90,51 @@
       "total": 3
     },
     "kilo/kilo-auto/free": {
-      "at": "2026-11-08T09:45:59Z",
+      "at": "2026-11-22T10:41:07Z",
       "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
-          "requests": 4,
-          "secs": 26.1
+          "requests": 5,
+          "secs": 13.3
         },
         "logs": {
           "detail": "got='search' want='search'",
           "pass": true,
-          "requests": 5,
-          "secs": 16.4
+          "requests": 8,
+          "secs": 16.3
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
           "requests": 5,
-          "secs": 30.1
+          "secs": 9.4
         }
       },
       "total": 3
     },
     "kilo/nvidia/nemotron-3-ultra-550b-a55b:free": {
-      "at": "2026-11-15T10:13:36Z",
+      "at": "2026-11-22T10:41:07Z",
       "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
           "requests": 7,
-          "secs": 28.1
+          "secs": 45.7
         },
         "logs": {
           "detail": "got='search' want='search'",
           "pass": true,
-          "requests": 16,
-          "secs": 54.6
+          "requests": 14,
+          "secs": 57.1
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
-          "requests": 7,
-          "secs": 47.5
+          "requests": 8,
+          "secs": 42.3
         }
       },
       "total": 3
@@ -221,51 +215,51 @@
       "total": 3
     },
     "nvidia/nvidia/nemotron-3-ultra-550b-a55b": {
-      "at": "2026-11-15T10:13:36Z",
+      "at": "2026-11-22T10:41:07Z",
       "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
-          "requests": 9,
-          "secs": 60.2
+          "requests": 7,
+          "secs": 34.0
         },
         "logs": {
           "detail": "got='search' want='search'",
           "pass": true,
-          "requests": 4,
-          "secs": 11.6
+          "requests": 7,
+          "secs": 16.5
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
-          "requests": 10,
-          "secs": 38.5
+          "requests": 8,
+          "secs": 29.2
         }
       },
       "total": 3
     },
     "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b": {
-      "at": "2026-11-01T10:00:20Z",
-      "passed": 2,
+      "at": "2026-11-22T10:41:07Z",
+      "passed": 3,
       "tasks": {
         "bugfix": {
           "detail": "OK",
           "pass": true,
-          "requests": 8,
-          "secs": 72.8
+          "requests": 28,
+          "secs": 87.2
         },
         "logs": {
-          "detail": "got='' want='search'",
-          "pass": false,
-          "requests": 7,
-          "secs": 13.7
+          "detail": "got='search' want='search'",
+          "pass": true,
+          "requests": 5,
+          "secs": 3.8
         },
         "refactor": {
           "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
           "pass": true,
-          "requests": 17,
-          "secs": 64.5
+          "requests": 10,
+          "secs": 29.1
         }
       },
       "total": 3
@@ -289,105 +283,70 @@
       },
       "total": 2
     },
-    "ovh/Qwen3.5-397B-A17B": {
-      "at": "2026-11-15T10:13:36Z",
-      "passed": 3,
+    "ovh/DeepSeek-V4.1-Flash-1017": {
+      "at": "2026-11-22T10:41:07Z",
+      "passed": 0,
       "tasks": {
         "bugfix": {
-          "detail": "OK",
-          "pass": true,
-          "requests": 4,
-          "secs": 72.4
-        },
-        "logs": {
-          "detail": "got='search' want='search'",
-          "pass": true,
-          "requests": 5,
-          "secs": 124.6
-        },
-        "refactor": {
-          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
-          "pass": true,
-          "requests": 8,
-          "secs": 216.3
+          "detail": "FAILED (failures=6)",
+          "pass": false,
+          "requests": 22,
+          "secs": 256.4
         }
       },
-      "total": 3
+      "total": 1
+    },
+    "ovh/Qwen3.5-397B-A17B": {
+      "at": "2026-11-22T10:41:07Z",
+      "passed": 0,
+      "tasks": {
+        "bugfix": {
+          "detail": "FAILED (failures=6)",
+          "pass": false,
+          "requests": 22,
+          "secs": 256.4
+        }
+      },
+      "total": 1
     },
     "ovh/Qwen3.6-27B": {
-      "at": "2026-11-15T10:13:36Z",
-      "passed": 2,
+      "at": "2026-11-22T10:41:07Z",
+      "passed": 0,
       "tasks": {
         "bugfix": {
-          "detail": "OK",
-          "pass": true,
-          "requests": 5,
-          "secs": 125.8
-        },
-        "logs": {
-          "detail": "got='' want='search'",
+          "detail": "FAILED (failures=6)",
           "pass": false,
-          "requests": 5,
-          "secs": 123.9
-        },
-        "refactor": {
-          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
-          "pass": true,
-          "requests": 7,
-          "secs": 182.6
+          "requests": 22,
+          "secs": 254.9
         }
       },
-      "total": 3
+      "total": 1
     },
     "ovh/Qwen3.8-27B": {
-      "at": "2026-11-15T10:13:36Z",
-      "passed": 3,
+      "at": "2026-11-22T10:41:07Z",
+      "passed": 0,
       "tasks": {
         "bugfix": {
-          "detail": "OK",
-          "pass": true,
-          "requests": 4,
-          "secs": 71.2
-        },
-        "logs": {
-          "detail": "got='search' want='search'",
-          "pass": true,
-          "requests": 6,
-          "secs": 154.5
-        },
-        "refactor": {
-          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
-          "pass": true,
-          "requests": 7,
-          "secs": 221.7
+          "detail": "FAILED (failures=6)",
+          "pass": false,
+          "requests": 22,
+          "secs": 256.4
         }
       },
-      "total": 3
+      "total": 1
     },
     "ovh/gpt-oss-120b": {
-      "at": "2026-11-15T10:13:36Z",
-      "passed": 3,
+      "at": "2026-11-22T10:41:07Z",
+      "passed": 0,
       "tasks": {
         "bugfix": {
-          "detail": "OK",
-          "pass": true,
-          "requests": 6,
-          "secs": 124.0
-        },
-        "logs": {
-          "detail": "got='search' want='search'",
-          "pass": true,
-          "requests": 10,
-          "secs": 244.3
-        },
-        "refactor": {
-          "detail": "out='TOTAL 97.20' sig='KEYWORD_ONLY' leftover=False",
-          "pass": true,
-          "requests": 12,
-          "secs": 335.7
+          "detail": "FAILED (failures=6)",
+          "pass": false,
+          "requests": 22,
+          "secs": 255.0
         }
       },
-      "total": 3
+      "total": 1
     }
   }
 }
