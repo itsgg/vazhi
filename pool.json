@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-21T08:23:34.575Z",
+  "generated": "2026-11-22T08:13:44.326Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -236,16 +236,6 @@
         "maxTokens": 32768
       },
       {
-        "id": "qwen3.6-35b-a3b",
-        "name": "qwen3.6-35b-a3b (OVH)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 131072,
-        "maxTokens": 16384
-      },
-      {
         "id": "Qwen3.8-27B",
         "name": "Qwen3.8-27B (OVH)",
         "reasoning": true,
@@ -343,6 +333,11 @@
       "status": "unverified"
     },
     {
+      "model": "google/gemini-3.6-flash",
+      "score": 40.8,
+      "status": "ok"
+    },
+    {
       "model": "ovh/Qwen3.6-27B",
       "rpm": 2,
       "score": 39.8,
@@ -430,6 +425,11 @@
       "status": "ok"
     },
     {
+      "model": "nvidia/stepfun-ai/step-5-preview",
+      "score": 17,
+      "status": "ok"
+    },
+    {
       "model": "ovh/gpt-oss-20b",
       "rpm": 2,
       "score": 17,
@@ -505,17 +505,6 @@
       "model": "ovh/Qwen3.5-9B",
       "rpm": 2,
       "score": 14.5,
-      "status": "ok"
-    },
-    {
-      "model": "ovh/qwen3.6-35b-a3b",
-      "rpm": 2,
-      "score": 14.5,
-      "status": "ok"
-    },
-    {
-      "model": "google/gemini-3.1-flash-lite",
-      "score": 13.6,
       "status": "ok"
     }
   ],
