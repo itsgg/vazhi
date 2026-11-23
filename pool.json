@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-22T08:13:44.326Z",
+  "generated": "2026-11-23T09:15:24.467Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -215,16 +215,6 @@
         "maxTokens": 32768
       },
       {
-        "id": "Qwen3.5-9B",
-        "name": "Qwen3.5-9B (OVH)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 131072,
-        "maxTokens": 16384
-      },
-      {
         "id": "Qwen3.6-27B",
         "name": "Qwen3.6-27B (OVH)",
         "reasoning": true,
@@ -247,7 +237,18 @@
         "maxTokens": 32768
       }
     ],
-    "llm7": [],
+    "llm7": [
+      {
+        "id": "DeepSeek-V4-Flash-0731",
+        "name": "DeepSeek-V4-Flash-0731 (LLM7)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 400000,
+        "maxTokens": 32768
+      }
+    ],
     "ollama-cloud": [
       {
         "id": "gemma4:31b",
@@ -328,6 +329,12 @@
       "status": "ok"
     },
     {
+      "model": "ovh/Qwen3.6-27B",
+      "rpm": 2,
+      "score": 45.9,
+      "status": "ok"
+    },
+    {
       "model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free",
       "score": 45.2,
       "status": "unverified"
@@ -338,15 +345,14 @@
       "status": "ok"
     },
     {
-      "model": "ovh/Qwen3.6-27B",
-      "rpm": 2,
-      "score": 39.8,
-      "status": "ok"
-    },
-    {
       "model": "ovh/gpt-oss-120b",
       "rpm": 2,
       "score": 31.5,
+      "status": "ok"
+    },
+    {
+      "model": "llm7/DeepSeek-V4-Flash-0731",
+      "score": 30.6,
       "status": "ok"
     },
     {
@@ -358,6 +364,11 @@
       "model": "zai-free/glm-4.7-flash",
       "score": 26.5,
       "status": "unverified"
+    },
+    {
+      "model": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "score": 26,
+      "status": "ok"
     },
     {
       "model": "ollama-cloud/gemma4:31b",
@@ -373,11 +384,6 @@
       "model": "openrouter/google/gemma-4-31b-it:free",
       "score": 22.6,
       "status": "unverified"
-    },
-    {
-      "model": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
-      "score": 22.5,
-      "status": "ok"
     },
     {
       "model": "kilo/nvidia/nemotron-3.5-lightning:free",
@@ -497,12 +503,6 @@
     },
     {
       "model": "ovh/qwen3-vl-30b-a3b",
-      "rpm": 2,
-      "score": 14.5,
-      "status": "ok"
-    },
-    {
-      "model": "ovh/Qwen3.5-9B",
       "rpm": 2,
       "score": 14.5,
       "status": "ok"
