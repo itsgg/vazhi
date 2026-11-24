@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-23T09:15:24.467Z",
+  "generated": "2026-11-24T11:09:30.385Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -15,6 +15,17 @@
           "text"
         ],
         "contextWindow": 1024000,
+        "maxTokens": 65536
+      },
+      {
+        "id": "dots-studio/dots-3-note-preview:free",
+        "name": "Dots Studio: Dots3-Note Preview (free) (Kilo)",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 512000,
         "maxTokens": 65536
       },
       {
@@ -215,6 +226,16 @@
         "maxTokens": 32768
       },
       {
+        "id": "Qwen3.5-9B",
+        "name": "Qwen3.5-9B (OVH)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 16384
+      },
+      {
         "id": "Qwen3.6-27B",
         "name": "Qwen3.6-27B (OVH)",
         "reasoning": true,
@@ -224,6 +245,16 @@
         ],
         "contextWindow": 262144,
         "maxTokens": 32768
+      },
+      {
+        "id": "qwen3.6-35b-a3b",
+        "name": "qwen3.6-35b-a3b (OVH)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 16384
       },
       {
         "id": "Qwen3.8-27B",
@@ -237,18 +268,7 @@
         "maxTokens": 32768
       }
     ],
-    "llm7": [
-      {
-        "id": "DeepSeek-V4-Flash-0731",
-        "name": "DeepSeek-V4-Flash-0731 (LLM7)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "contextWindow": 400000,
-        "maxTokens": 32768
-      }
-    ],
+    "llm7": [],
     "ollama-cloud": [
       {
         "id": "gemma4:31b",
@@ -351,11 +371,6 @@
       "status": "ok"
     },
     {
-      "model": "llm7/DeepSeek-V4-Flash-0731",
-      "score": 30.6,
-      "status": "ok"
-    },
-    {
       "model": "ollama-cloud/gpt-oss:120b",
       "score": 28.1,
       "status": "unverified"
@@ -416,22 +431,12 @@
       "status": "unverified"
     },
     {
-      "model": "nvidia/minimaxai/minimax-m3.1-flash",
-      "score": 17,
-      "status": "ok"
-    },
-    {
       "model": "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
       "score": 17,
       "status": "ok"
     },
     {
       "model": "nvidia/poolside/laguna-xs-2.1",
-      "score": 17,
-      "status": "ok"
-    },
-    {
-      "model": "nvidia/stepfun-ai/step-5-preview",
       "score": 17,
       "status": "ok"
     },
@@ -443,6 +448,11 @@
     },
     {
       "model": "kilo/baidu/ernie-5.5-flash-preview:free",
+      "score": 16.2,
+      "status": "ok"
+    },
+    {
+      "model": "kilo/dots-studio/dots-3-note-preview:free",
       "score": 16.2,
       "status": "ok"
     },
@@ -503,6 +513,18 @@
     },
     {
       "model": "ovh/qwen3-vl-30b-a3b",
+      "rpm": 2,
+      "score": 14.5,
+      "status": "ok"
+    },
+    {
+      "model": "ovh/Qwen3.5-9B",
+      "rpm": 2,
+      "score": 14.5,
+      "status": "ok"
+    },
+    {
+      "model": "ovh/qwen3.6-35b-a3b",
       "rpm": 2,
       "score": 14.5,
       "status": "ok"
