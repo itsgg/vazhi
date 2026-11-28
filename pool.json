@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-27T09:46:18.368Z",
+  "generated": "2026-11-28T08:59:32.212Z",
   "sharedLimits": [
     "kilo",
     "llm7"
@@ -15,17 +15,6 @@
           "text"
         ],
         "contextWindow": 1024000,
-        "maxTokens": 65536
-      },
-      {
-        "id": "inclusionai/ling-3.2-flash:free",
-        "name": "inclusionAI: Ling 3.2 Flash (free) (Kilo)",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "contextWindow": 1048576,
         "maxTokens": 65536
       },
       {
@@ -415,6 +404,11 @@
       "status": "unverified"
     },
     {
+      "model": "nvidia/minimaxai/minimax-m3.1-flash",
+      "score": 17,
+      "status": "ok"
+    },
+    {
       "model": "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
       "score": 17,
       "status": "ok"
@@ -437,11 +431,6 @@
     },
     {
       "model": "kilo/baidu/ernie-5.5-flash-preview:free",
-      "score": 16.2,
-      "status": "ok"
-    },
-    {
-      "model": "kilo/inclusionai/ling-3.2-flash:free",
       "score": 16.2,
       "status": "ok"
     },
